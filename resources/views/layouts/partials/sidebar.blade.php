@@ -22,7 +22,7 @@
         </div>
         <div class="min-w-0">
             <p class="text-sm font-bold leading-tight truncate">COMSOC Hub</p>
-            <p class="text-xs text-comsoc-300 truncate">CCIS · Univ. of Makati</p>
+            <p class="text-xs text-gold-500 truncate">CCIS · Univ. of Makati</p>
         </div>
     </div>
 
@@ -53,12 +53,12 @@
     {{-- User footer --}}
     <div class="px-3 py-4 border-t border-comsoc-700">
         <div class="flex items-center gap-3 px-3 py-2">
-            <div class="flex items-center justify-center w-8 h-8 rounded-full bg-comsoc-600 text-xs font-bold shrink-0">
-                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-            </div>
+            <img src="{{ Auth::user()->getProfilePictureUrl() }}"
+                 alt="{{ Auth::user()->name }}"
+                 class="w-8 h-8 rounded-full object-cover shrink-0 border border-comsoc-600" />
             <div class="min-w-0 flex-1">
                 <p class="text-sm font-medium truncate">{{ Auth::user()->name }}</p>
-                <p class="text-xs text-comsoc-400 truncate">{{ Auth::user()->email }}</p>
+                <p class="text-xs text-comsoc-400 truncate">{{ Auth::user()->getRoleLabel() }}</p>
             </div>
         </div>
         <div class="mt-1 space-y-0.5">

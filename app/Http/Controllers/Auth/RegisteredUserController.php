@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Program;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +21,9 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        return view('auth.register');
+        $programs = Program::where('is_active', true)->orderBy('short_name')->get();
+
+        return view('auth.register', compact('programs'));
     }
 
     /**
@@ -31,15 +34,21 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'name'       => ['required', 'string', 'max:255'],
+            'student_id' => ['nullable', 'string', 'max:20', 'unique:users,student_id'],
+            'program_id' => ['nullable', 'exists:programs,id'],
+            'email'      => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'password'   => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name'           => $request->name,
+            'student_id'     => $request->student_id ?: null,
+            'program_id'     => $request->program_id ?: null,
+            'email'          => $request->email,
+            'password'       => Hash::make($request->password),
+            'role'           => User::ROLE_STUDENT,
+            'account_status' => User::STATUS_ACTIVE,
         ]);
 
         event(new Registered($user));

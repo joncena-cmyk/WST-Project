@@ -4,11 +4,23 @@
     </x-slot>
 
     {{-- Welcome banner --}}
-    <div class="mb-6 rounded-xl bg-gradient-to-r from-comsoc-800 to-comsoc-600 p-6 text-white shadow-sm">
-        <h2 class="text-xl font-bold">Welcome back, {{ Auth::user()->name }}!</h2>
-        <p class="mt-1 text-comsoc-200 text-sm">
-            COMSOC Hub — your centralized platform for organization engagement, events, and community.
-        </p>
+    <div class="mb-6 rounded-xl bg-gradient-to-r from-comsoc-800 to-comsoc-700 p-6 text-white shadow-sm">
+        <div class="flex items-center gap-4">
+            <img src="{{ Auth::user()->getProfilePictureUrl() }}"
+                 alt="{{ Auth::user()->name }}"
+                 class="w-14 h-14 rounded-full object-cover border-2 border-comsoc-500 shrink-0" />
+            <div>
+                <h2 class="text-xl font-bold">Welcome back, {{ Auth::user()->name }}!</h2>
+                <p class="mt-0.5 text-comsoc-200 text-sm flex items-center gap-2">
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-comsoc-600 text-white">
+                        {{ Auth::user()->getRoleLabel() }}
+                    </span>
+                    @if(Auth::user()->program)
+                        <span>· {{ Auth::user()->program->short_name }}</span>
+                    @endif
+                </p>
+            </div>
+        </div>
     </div>
 
     {{-- Quick stats placeholders --}}

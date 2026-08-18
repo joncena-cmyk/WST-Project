@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\Program;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProfileController extends Controller
@@ -17,7 +19,8 @@ class ProfileController extends Controller
     public function edit(Request $request): View
     {
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user'     => $request->user(),
+            'programs' => Program::where('is_active', true)->orderBy('short_name')->get(),
         ]);
     }
 
@@ -26,13 +29,30 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user = $request->user();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $user->fill($request->validated());
+
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
         }
 
-        $request->user()->save();
+        // Handle profile picture upload
+        if ($request->hasFile('profile_picture')) {
+            $request->validate([
+                'profile_picture' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            ]);
+
+            // Remove old picture if it exists
+            if ($user->profile_picture) {
+                Storage::disk('public')->delete($user->profile_picture);
+            }
+
+            $path = $request->file('profile_picture')->store('profile-pictures', 'public');
+            $user->profile_picture = $path;
+        }
+
+        $user->save();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
@@ -49,6 +69,11 @@ class ProfileController extends Controller
         $user = $request->user();
 
         Auth::logout();
+
+        // Clean up profile picture
+        if ($user->profile_picture) {
+            Storage::disk('public')->delete($user->profile_picture);
+        }
 
         $user->delete();
 
