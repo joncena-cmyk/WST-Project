@@ -4,345 +4,269 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>COMSOC Hub — Computer Society · CCIS · University of Makati</title>
-    <meta name="description" content="COMSOC Hub is the centralized platform for the Computer Society of CCIS, University of Makati.">
+    <meta name="description" content="The centralized platform of the Computer Society of CCIS, University of Makati.">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800,900&display=swap" rel="stylesheet"/>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        /* ---------- grid / orb backgrounds ---------- */
-        .hero-grid {
-            background-image:
-                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-            background-size: 44px 44px;
-        }
-        /* ---------- gradient headline ---------- */
-        .text-gradient {
-            background: linear-gradient(135deg, #fde047 0%, #facc15 45%, #fb923c 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        /* ---------- stat dividers ---------- */
-        .stat-border::after {
-            content:''; position:absolute; right:0; top:20%; height:60%; width:1px;
-            background:rgba(255,255,255,0.13);
-        }
-        .stat-border:last-child::after { display:none; }
+        /* Utility top bar */
+        .util-bar { background: #0a2e1a; }
 
-        /* ---------- scroll-reveal ---------- */
-        .reveal { opacity:0; transform:translateY(28px); transition:opacity .55s ease, transform .55s ease; }
-        .reveal.visible { opacity:1; transform:translateY(0); }
-        .reveal-left  { opacity:0; transform:translateX(-28px); transition:opacity .55s ease, transform .55s ease; }
-        .reveal-left.visible  { opacity:1; transform:translateX(0); }
-        .reveal-right { opacity:0; transform:translateX(28px);  transition:opacity .55s ease, transform .55s ease; }
-        .reveal-right.visible { opacity:1; transform:translateX(0); }
-        .reveal-scale { opacity:0; transform:scale(0.92); transition:opacity .5s ease, transform .5s ease; }
-        .reveal-scale.visible { opacity:1; transform:scale(1); }
+        /* Hero banner */
+        .hero-slide { position: relative; }
 
-        /* ---------- stagger helpers ---------- */
-        .delay-100 { transition-delay: .10s !important; }
-        .delay-200 { transition-delay: .20s !important; }
-        .delay-300 { transition-delay: .30s !important; }
-        .delay-400 { transition-delay: .40s !important; }
-        .delay-500 { transition-delay: .50s !important; }
-        .delay-600 { transition-delay: .60s !important; }
+        /* Ticker / announcement bar */
+        @keyframes ticker {
+            0%   { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        .ticker-inner { animation: ticker 28s linear infinite; white-space: nowrap; }
+        .ticker-inner:hover { animation-play-state: paused; }
 
-        /* ---------- floating particles ---------- */
-        @keyframes float-up {
-            0%   { transform:translateY(0)   translateX(0)   scale(1);   opacity:.6; }
-            50%  { transform:translateY(-60px) translateX(10px) scale(1.1); opacity:.9; }
-            100% { transform:translateY(-120px) translateX(-5px) scale(.9); opacity:0; }
-        }
-        .particle {
-            position:absolute; border-radius:50%;
-            background:rgba(74,222,128,0.5);
-            pointer-events:none; animation:float-up linear infinite;
-        }
+        /* Card hover */
+        .news-card { transition: box-shadow .18s ease, transform .18s ease; }
+        .news-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,0.10); transform: translateY(-2px); }
 
-        /* ---------- card hover lift ---------- */
-        .lift { transition:transform .22s ease, box-shadow .22s ease; }
-        .lift:hover { transform:translateY(-5px); box-shadow:0 24px 48px rgba(0,0,0,0.09); }
+        /* Section heading bar */
+        .section-bar { border-left: 4px solid #16a34a; padding-left: .75rem; }
 
-        /* ---------- officer card photo ring ---------- */
-        .officer-ring {
-            background: conic-gradient(#16a34a, #facc15, #16a34a);
-            padding: 3px; border-radius: 9999px;
-        }
-        .officer-ring-inner {
-            background: #1e3a2f; border-radius: 9999px; overflow:hidden;
-        }
-
-        /* ---------- shimmer on placeholder ---------- */
-        @keyframes shimmer {
-            0%   { background-position:-400px 0; }
-            100% { background-position:400px 0; }
-        }
-        .photo-placeholder {
-            background: linear-gradient(90deg, #1a3328 25%, #224434 50%, #1a3328 75%);
-            background-size: 400px 100%;
-            animation: shimmer 2.2s infinite;
-        }
-
-        /* ---------- smooth scroll ---------- */
         html { scroll-behavior: smooth; }
     </style>
 </head>
-<body class="font-sans antialiased bg-white text-gray-900 overflow-x-hidden" x-data>
+<body class="font-sans antialiased bg-white text-gray-900" x-data>
 
-{{-- ========================================================
-     NAVBAR
-     ======================================================== --}}
+{{-- ============================================================
+     UTILITY TOP BAR
+     ============================================================ --}}
+<div class="util-bar hidden md:block">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-9">
+            <div class="flex items-center gap-4 text-[11px] text-green-300">
+                <span>Computer Society · CCIS · University of Makati</span>
+                <span class="text-green-600">|</span>
+                <span>Academic Year 2025–2026</span>
+            </div>
+            <div class="flex items-center gap-4">
+                @if(Route::has('login'))
+                    @auth
+                        <a href="{{ url('/dashboard') }}" class="text-[11px] text-green-300 hover:text-white transition-colors">
+                            Go to Dashboard →
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="text-[11px] text-green-300 hover:text-white transition-colors">Sign in</a>
+                        <span class="text-green-700">|</span>
+                        <a href="{{ route('register') }}" class="text-[11px] text-green-300 hover:text-white transition-colors">Register</a>
+                    @endauth
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ============================================================
+     MAIN NAVBAR
+     ============================================================ --}}
 <nav x-data="{ scrolled: false, mobileOpen: false }"
-     x-on:scroll.window="scrolled = window.scrollY > 24"
-     :class="scrolled ? 'bg-white shadow-md' : 'bg-transparent'"
-     class="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
+     x-on:scroll.window="scrolled = window.scrollY > 40"
+     :class="scrolled ? 'shadow-md' : 'shadow-sm'"
+     class="sticky top-0 z-50 bg-white border-b border-gray-200 transition-shadow duration-300">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
 
             {{-- Brand --}}
-            <a href="/" class="flex items-center gap-2.5 group">
-                <div class="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-br from-comsoc-600 to-comsoc-800 shadow-lg">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                </div>
+            <a href="/" class="flex items-center gap-3 shrink-0">
+                <img src="{{ asset('images/comsoc_logo.png') }}"
+                     alt="COMSOC Logo"
+                     class="w-10 h-10 object-contain shrink-0"/>
                 <div class="leading-none">
-                    <span class="block font-bold text-lg"
-                          :class="scrolled ? 'text-gray-900' : 'text-white'">COMSOC Hub</span>
-                    <span class="block text-[10px] font-medium tracking-wide"
-                          :class="scrolled ? 'text-gray-400' : 'text-comsoc-300'">CCIS · Univ. of Makati</span>
+                    <span class="block font-black text-comsoc-900 text-lg tracking-tight">COMSOC Hub</span>
+                    <span class="block text-[10px] text-gray-400 font-medium">CCIS · Univ. of Makati</span>
                 </div>
             </a>
 
             {{-- Desktop nav --}}
-            <div class="hidden md:flex items-center gap-7">
-                @foreach(['Features'=>'#features','How It Works'=>'#how-it-works','Officers'=>'#officers','Roles'=>'#roles'] as $label => $href)
+            <div class="hidden lg:flex items-center gap-1">
+                @foreach([
+                    'About'    => route('about'),
+                    'News'     => '#features',
+                    'Events'   => '#events-preview',
+                    'Officers' => '#officers',
+                    'How It Works' => '#news',
+                ] as $label => $href)
                     <a href="{{ $href }}"
-                       class="text-sm font-medium transition-colors"
-                       :class="scrolled ? 'text-gray-600 hover:text-gray-900' : 'text-comsoc-200 hover:text-white'">
+                       class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-comsoc-700 hover:bg-comsoc-50 rounded-lg transition-colors">
                         {{ $label }}
                     </a>
                 @endforeach
             </div>
 
-            {{-- Auth buttons --}}
+            {{-- Auth CTA --}}
             <div class="flex items-center gap-2">
                 @auth
                     <a href="{{ url('/dashboard') }}"
-                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-comsoc-600 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-700 transition-colors shadow">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-comsoc-700 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-800 transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
                         </svg>
                         Dashboard
                     </a>
                 @else
                     <a href="{{ route('login') }}"
-                       class="text-sm font-semibold px-3 py-1.5 rounded-lg transition-colors"
-                       :class="scrolled ? 'text-gray-600 hover:text-gray-900' : 'text-white hover:bg-white/10'">
+                       class="hidden sm:inline-flex px-4 py-2 text-sm font-semibold text-comsoc-700 border border-comsoc-300 rounded-lg hover:bg-comsoc-50 transition-colors">
                         Sign in
                     </a>
-                    @if (Route::has('register'))
+                    @if(Route::has('register'))
                         <a href="{{ route('register') }}"
-                           class="inline-flex items-center gap-1 px-4 py-2 bg-comsoc-600 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-700 transition-colors shadow">
-                            Get started
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                            </svg>
+                           class="inline-flex items-center px-4 py-2 bg-comsoc-700 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-800 transition-colors shadow-sm">
+                            Join COMSOC
                         </a>
                     @endif
                 @endauth
+
+                {{-- Mobile menu toggle --}}
+                <button @click="mobileOpen = !mobileOpen"
+                        class="lg:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg ml-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
             </div>
+        </div>
+
+        {{-- Mobile menu --}}
+        <div x-show="mobileOpen" x-cloak class="lg:hidden border-t border-gray-100 py-3 space-y-1">
+            @foreach(['About'=>route('about'),'News'=>'#features','Events'=>'#events-preview','Officers'=>'#officers','How It Works'=>'#news'] as $l => $h)
+                <a href="{{ $h }}" @click="mobileOpen=false"
+                   class="block px-4 py-2 text-sm font-medium text-gray-700 hover:bg-comsoc-50 hover:text-comsoc-700 rounded-lg">{{ $l }}</a>
+            @endforeach
         </div>
     </div>
 </nav>
 
-{{-- ========================================================
-     HERO
-     ======================================================== --}}
-<section class="relative min-h-screen flex items-center overflow-hidden bg-gradient-to-br from-comsoc-950 via-comsoc-900 to-comsoc-800">
-
-    {{-- Grid --}}
-    <div class="absolute inset-0 hero-grid pointer-events-none"></div>
-
-    {{-- Orbs --}}
-    <div class="absolute top-0 right-0 w-[700px] h-[700px] rounded-full pointer-events-none"
-         style="background:radial-gradient(circle,rgba(22,163,74,.18) 0%,transparent 68%);transform:translate(25%,-25%)"></div>
-    <div class="absolute bottom-0 left-0 w-[600px] h-[600px] rounded-full pointer-events-none"
-         style="background:radial-gradient(circle,rgba(234,179,8,.10) 0%,transparent 68%);transform:translate(-25%,25%)"></div>
-
-    {{-- Floating particles --}}
-    @for ($i = 0; $i < 14; $i++)
-        @php
-            $size   = rand(4, 10);
-            $left   = rand(5, 95);
-            $delay  = rand(0, 8000);
-            $dur    = rand(6000, 14000);
-            $bottom = rand(0, 30);
-        @endphp
-        <div class="particle" style="
-            width:{{ $size }}px; height:{{ $size }}px;
-            left:{{ $left }}%; bottom:{{ $bottom }}%;
-            animation-duration:{{ $dur }}ms;
-            animation-delay:{{ $delay }}ms;
-            opacity:0;
-        "></div>
-    @endfor
-
-    <div class="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-32">
-        <div class="max-w-4xl mx-auto text-center">
-
-            {{-- Badge --}}
-            <div class="reveal inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-comsoc-600/40 bg-comsoc-900/60 backdrop-blur-sm mb-8">
-                <span class="relative flex h-2 w-2">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-2 w-2 bg-green-400"></span>
-                </span>
-                <span class="text-xs font-medium text-comsoc-200 tracking-wide">
-                    Computer Society · CCIS · University of Makati
-                </span>
-            </div>
-
-            {{-- Headline --}}
-            <h1 class="reveal delay-100 text-5xl sm:text-6xl lg:text-7xl font-black text-white leading-[1.05] tracking-tight mb-6">
-                Your organization,<br>
-                <span class="text-gradient">one platform.</span>
-            </h1>
-
-            {{-- Sub --}}
-            <p class="reveal delay-200 text-lg sm:text-xl text-comsoc-200/90 max-w-2xl mx-auto mb-10 leading-relaxed">
-                COMSOC Hub brings membership, events, community, attendance, and documents
-                together — so your org can focus on what actually matters.
+{{-- ============================================================
+     ANNOUNCEMENT TICKER
+     ============================================================ --}}
+<div class="bg-comsoc-700 overflow-hidden">
+    <div class="flex items-center h-9">
+        <div class="shrink-0 flex items-center gap-2 px-4 bg-gold-500 h-full z-10">
+            <svg class="w-3.5 h-3.5 text-comsoc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+            </svg>
+            <span class="text-[11px] font-black text-comsoc-900 uppercase tracking-widest">Announcements</span>
+        </div>
+        <div class="flex-1 overflow-hidden relative">
+            <p class="ticker-inner text-xs text-white/90 py-2">
+                &nbsp;&nbsp;&nbsp;&nbsp;📢 Welcome to COMSOC Hub — your centralized platform for the Computer Society of CCIS, University of Makati.
+                &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
+                🎓 COMSOC membership registration for AY 2025–2026 is now open. Contact a COMSOC officer to enroll.
+                &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
+                📅 Upcoming events will be posted once approved by the organization adviser.
+                &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
+                💻 COMSOC Hub is being built module by module — more features coming soon!
             </p>
+        </div>
+    </div>
+</div>
 
-            {{-- Buttons --}}
-            <div class="reveal delay-300 flex flex-col sm:flex-row gap-3 justify-center mb-14">
-                @auth
-                    <a href="{{ url('/dashboard') }}"
-                       class="group inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white text-comsoc-900 font-bold rounded-xl hover:bg-comsoc-50 transition-all shadow-2xl shadow-black/30">
-                        Go to Dashboard
-                        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                        </svg>
-                    </a>
-                @else
-                    <a href="{{ route('register') }}"
-                       class="group inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-white text-comsoc-900 font-bold rounded-xl hover:bg-comsoc-50 transition-all shadow-2xl shadow-black/30">
-                        Create an account
-                        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                        </svg>
-                    </a>
-                    <a href="{{ route('login') }}"
-                       class="inline-flex items-center justify-center gap-2 px-7 py-3.5 border-2 border-white/20 text-white font-bold rounded-xl hover:bg-white/10 hover:border-white/35 transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
-                        </svg>
-                        Sign in
-                    </a>
-                @endauth
-            </div>
+{{-- ============================================================
+     HERO — Full-width photo banner
+     ============================================================ --}}
+<section x-data="{ playing: true }" class="relative overflow-hidden" style="height: 580px; min-height: 420px;">
 
-            {{-- Stats strip --}}
-            <div class="reveal delay-400 grid grid-cols-3 gap-px bg-white/10 rounded-2xl overflow-hidden border border-white/10 max-w-xl mx-auto">
-                @foreach([['7','User Roles'],['10+','Modules'],['4','Programs']] as [$v,$l])
-                    <div class="relative bg-white/5 backdrop-blur-sm px-6 py-5 stat-border text-center">
-                        <p class="text-2xl font-black text-white">{{ $v }}</p>
-                        <p class="text-[11px] text-comsoc-300 font-medium mt-0.5 uppercase tracking-wide">{{ $l }}</p>
-                    </div>
-                @endforeach
-            </div>
+    {{-- Background photo --}}
+    <div class="absolute inset-0">
+        <img src="{{ asset('images/hero_logo.jpg') }}"
+             alt="COMSOC Hero"
+             class="w-full h-full object-cover object-center"/>
+    </div>
+
+    {{-- Multi-layer overlay: dark gradient from bottom, green tint --}}
+    <div class="absolute inset-0"
+         style="background: linear-gradient(
+             to top,
+             rgba(5,46,22,0.96) 0%,
+             rgba(5,46,22,0.72) 38%,
+             rgba(5,46,22,0.38) 65%,
+             rgba(0,0,0,0.28) 100%
+         )"></div>
+    <div class="absolute inset-0" style="background: rgba(22,101,52,0.18); mix-blend-mode: multiply;"></div>
+
+    {{-- Gold accent line at top --}}
+    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-gold-600 via-gold-400 to-gold-600 z-10"></div>
+
+    {{-- Pause / play button (top-right like UP) --}}
+    <button @click="playing = !playing"
+            class="absolute top-4 right-4 z-20 w-9 h-9 flex items-center justify-center bg-black/40 hover:bg-black/60 border border-white/20 rounded text-white transition-colors"
+            :aria-label="playing ? 'Pause' : 'Play'">
+        <svg x-show="playing" class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M4 2h3v12H4zm5 0h3v12H9z"/>
+        </svg>
+        <svg x-show="!playing" x-cloak class="w-4 h-4" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M4 2l10 6-10 6V2z"/>
+        </svg>
+    </button>
+
+    {{-- Content — center aligned --}}
+    <div class="relative z-10 flex flex-col items-center justify-center h-full px-4 sm:px-8 text-center">
+
+        {{-- COMSOC logo watermark above headline --}}
+        <img src="{{ asset('images/comsoc_logo.png') }}"
+             alt="COMSOC Logo"
+             class="w-16 h-16 object-contain mb-4 opacity-95 drop-shadow-xl"/>
+
+        {{-- Main headline --}}
+        <h1 class="text-2xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-widest leading-tight mb-3"
+            style="text-shadow: 0 2px 24px rgba(0,0,0,0.55);">
+            COMSOC HUB
+        </h1>
+
+        {{-- Subline --}}
+        <p class="text-xs sm:text-sm text-white/85 max-w-xl mb-7 leading-relaxed"
+           style="text-shadow: 0 1px 10px rgba(0,0,0,0.65);">
+            The centralized platform of the Computer Society of CCIS, University of Makati.
+        </p>
+
+        {{-- CTA — Learn About COMSOC --}}
+        <div class="flex justify-center">
+            <a href="{{ route('about') }}"
+               class="inline-flex items-center gap-2 px-7 py-3 border-2 border-white/70 text-white font-bold text-sm uppercase tracking-wider rounded hover:bg-white hover:text-comsoc-900 transition-all shadow-lg">
+                Learn About COMSOC
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </a>
         </div>
     </div>
 
-    {{-- Wave --}}
-    <div class="absolute bottom-0 left-0 right-0 pointer-events-none">
-        <svg viewBox="0 0 1440 90" preserveAspectRatio="none" class="w-full h-16 sm:h-24 block">
-            <path d="M0 90L80 75C160 60 320 30 480 22C640 15 800 30 960 42C1120 55 1280 65 1360 70L1440 75V90H0Z" fill="#f9fafb"/>
+    {{-- Bottom wave --}}
+    <div class="absolute bottom-0 left-0 right-0 pointer-events-none z-10">
+        <svg viewBox="0 0 1440 48" preserveAspectRatio="none" class="w-full h-10 sm:h-12 block">
+            <path d="M0 48L480 20C720 8 960 8 1440 20V48H0Z" fill="#f9fafb"/>
         </svg>
     </div>
 </section>
 
-{{-- ========================================================
-     FEATURES
-     ======================================================== --}}
-<section id="features" class="py-24 bg-gray-50">
+{{-- ============================================================
+     QUICK STATS STRIP
+     ============================================================ --}}
+<section class="bg-gray-50 border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16 reveal">
-            <span class="inline-flex items-center px-3 py-1 rounded-full bg-comsoc-100 text-comsoc-700 text-xs font-bold tracking-widest uppercase mb-4">
-                Platform Features
-            </span>
-            <h2 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Everything COMSOC needs</h2>
-            <p class="mt-4 text-gray-500 text-lg max-w-xl mx-auto">From event planning to certificate issuance — one platform handles it all.</p>
-        </div>
-
-        @php
-        $features = [
-            ['01','M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z','Membership Management','Academic-year membership tracking with status management, renewal history, and program association.','bg-blue-50 text-blue-600'],
-            ['02','M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z','Event Management','Create, plan, and publish events with a full adviser approval workflow and real-time status tracking.','bg-comsoc-50 text-comsoc-600'],
-            ['03','M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z','Event Registration','Students register directly — no Google Forms. Capacity limits and deadline enforcement built in.','bg-purple-50 text-purple-600'],
-            ['04','M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z','QR Attendance','Officers scan QR passes at the door. Attendance is recorded instantly with duplicate prevention.','bg-orange-50 text-orange-600'],
-            ['05','M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z','Digital Certificates','Eligible attendees automatically receive certificates they can view and download.','bg-yellow-50 text-yellow-600'],
-            ['06','M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z','COMSOC Community','A private org feed for announcements, discussions, and event updates — not a social media clone.','bg-pink-50 text-pink-600'],
-        ];
-        @endphp
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            @foreach ($features as $i => [$num, $icon, $title, $desc, $color])
-                <div class="lift reveal bg-white rounded-2xl border border-gray-100 p-7 shadow-sm group delay-{{ min($i * 100, 500) }}">
-                    <div class="flex items-start justify-between mb-5">
-                        <div class="flex items-center justify-center w-12 h-12 rounded-xl {{ $color }}">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="{{ $icon }}"/>
-                            </svg>
-                        </div>
-                        <span class="text-4xl font-black text-gray-100 group-hover:text-gray-200 transition-colors select-none">{{ $num }}</span>
-                    </div>
-                    <h3 class="text-base font-bold text-gray-900 mb-2">{{ $title }}</h3>
-                    <p class="text-sm text-gray-500 leading-relaxed">{{ $desc }}</p>
-                </div>
-            @endforeach
-        </div>
-    </div>
-</section>
-
-{{-- ========================================================
-     HOW IT WORKS
-     ======================================================== --}}
-<section id="how-it-works" class="py-24 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16 reveal">
-            <span class="inline-flex items-center px-3 py-1 rounded-full bg-comsoc-100 text-comsoc-700 text-xs font-bold tracking-widest uppercase mb-4">
-                How It Works
-            </span>
-            <h2 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">From sign-up to certificate</h2>
-            <p class="mt-4 text-gray-500 text-lg max-w-xl mx-auto">The full student journey — entirely within COMSOC Hub.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div class="grid grid-cols-2 sm:grid-cols-4 divide-x divide-gray-200">
             @foreach([
-                ['1','M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z','Register & Join','Create your account, choose your program, and become part of COMSOC.'],
-                ['2','M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z','Discover Events','Browse published events, view details, and register directly on the platform.'],
-                ['3','M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z','Attend & Check In','Show your QR pass. Officers scan it — attendance recorded instantly.'],
-                ['4','M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z','Get Your Certificate','If eligible, your certificate is automatically issued and downloadable.'],
-            ] as $idx => [$step,$icon,$title,$desc])
-                <div class="relative text-center reveal delay-{{ $idx * 100 }}">
-                    @if ($idx < 3)
-                        <div class="hidden lg:block absolute top-8 left-[calc(50%+40px)] right-0 h-px z-0"
-                             style="background:linear-gradient(90deg,#bbf7d0,transparent)"></div>
-                    @endif
-                    <div class="relative z-10 flex flex-col items-center">
-                        <div class="relative mb-5">
-                            <div class="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-comsoc-600 to-comsoc-800 shadow-lg shadow-comsoc-900/20">
-                                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="{{ $icon }}"/>
-                                </svg>
-                            </div>
-                            <span class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-gold-400 text-comsoc-900 text-xs font-black flex items-center justify-center shadow-md">{{ $step }}</span>
-                        </div>
-                        <h3 class="text-base font-bold text-gray-900 mb-2">{{ $title }}</h3>
-                        <p class="text-sm text-gray-500 leading-relaxed max-w-[200px]">{{ $desc }}</p>
+                ['7',    'User Roles',      'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'],
+                ['10+',  'Platform Modules','M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18'],
+                ['4',    'Programs',        'M12 14l9-5-9-5-9 5 9 5z'],
+                ['2026', 'Academic Year',   'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
+            ] as [$val, $label, $icon])
+                <div class="flex items-center gap-3 px-6 py-5">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-comsoc-100 shrink-0">
+                        <svg class="w-5 h-5 text-comsoc-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $icon }}"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-black text-comsoc-800 leading-none">{{ $val }}</p>
+                        <p class="text-xs text-gray-500 font-medium mt-0.5">{{ $label }}</p>
                     </div>
                 </div>
             @endforeach
@@ -350,120 +274,393 @@
     </div>
 </section>
 
-{{-- ========================================================
-     OFFICERS SECTION
-     ======================================================== --}}
-<section id="officers" class="py-24 bg-comsoc-950 relative overflow-hidden">
-    <div class="absolute inset-0 hero-grid pointer-events-none opacity-40"></div>
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] pointer-events-none"
-         style="background:radial-gradient(ellipse,rgba(22,163,74,0.13) 0%,transparent 70%)"></div>
-
-    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {{-- Header --}}
-        <div class="text-center mb-16 reveal">
-            <span class="inline-flex items-center px-3 py-1 rounded-full bg-comsoc-800 text-comsoc-300 text-xs font-bold tracking-widest uppercase mb-4">
-                Academic Year 2025–2026
-            </span>
-            <h2 class="text-3xl sm:text-4xl font-black text-white tracking-tight">Meet the Officers</h2>
-            <p class="mt-4 text-comsoc-300 text-lg max-w-xl mx-auto">
-                The elected leaders of the Computer Society — CCIS, University of Makati.
-            </p>
-        </div>
-
-        @php
-        // Executive Officers
-        $executives = [
-            ['President',                          'Alexandra Reyes',         'CS'],
-            ['Vice President for Internal Affairs','Benjamin Cruz',           'IT'],
-            ['Vice President for External Affairs','Christine Lim',           'IT'],
-            ['Secretary',                          'Daniel Ocampo',           'CS'],
-            ['Treasurer',                          'Erica Santos',            'IS'],
-            ['Auditor',                            'Francis Dela Torre',      'CS'],
-            ['Public Relations Officer',           'Gabrielle Mendoza',       'IT'],
-        ];
-
-        // Program Representatives
-        $progReps = [
-            ['Program Representative',  'Harold Bautista',   'BSCS', 'Computer Science'],
-            ['Program Representative',  'Isabelle Tan',      'BSIT', 'Information Technology'],
-            ['Program Representative',  'James Navarro',     'DIT',  'Diploma in IT'],
-            ['Program Representative',  'Karen Villanueva',  'BSIS', 'Information Systems'],
-        ];
-
-        $roleColors = [
-            'President'                            => 'from-yellow-600 to-yellow-800',
-            'Vice President for Internal Affairs'  => 'from-comsoc-600 to-comsoc-800',
-            'Vice President for External Affairs'  => 'from-comsoc-600 to-comsoc-800',
-            'Secretary'                            => 'from-blue-600 to-blue-800',
-            'Treasurer'                            => 'from-emerald-600 to-emerald-800',
-            'Auditor'                              => 'from-red-600 to-red-800',
-            'Public Relations Officer'             => 'from-pink-600 to-pink-800',
-            'Program Representative'               => 'from-purple-600 to-purple-800',
-        ];
-        @endphp
-
-        {{-- Executive Officers --}}
-        <div class="mb-12">
-            <p class="text-comsoc-400 text-xs font-bold tracking-widest uppercase text-center mb-8">Executive Officers</p>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
-                @foreach ($executives as $idx => [$position, $name, $program])
-                    <div class="reveal delay-{{ min($idx * 100, 600) }} lift bg-comsoc-900/50 border border-comsoc-700/40 rounded-2xl p-5 text-center hover:border-comsoc-500/60 transition-all">
-                        {{-- Photo --}}
-                        <div class="flex justify-center mb-4">
-                            <div class="officer-ring">
-                                <div class="officer-ring-inner w-20 h-20">
-                                    <div class="photo-placeholder w-20 h-20 flex items-center justify-center">
-                                        <svg class="w-9 h-9 text-comsoc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {{-- Info --}}
-                        <p class="font-bold text-white text-sm leading-tight">{{ $name }}</p>
-                        <span class="inline-flex items-center mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold
-                                     bg-gradient-to-r {{ $roleColors[$position] }} text-white">
-                            {{ $position === 'Public Relations Officer' ? 'PRO' : explode(' ', $position)[0] }}
-                        </span>
-                        <p class="text-comsoc-500 text-[11px] mt-2 leading-tight">{{ $position }}</p>
-                        <p class="text-comsoc-600 text-[10px] mt-1">{{ $program }}</p>
+{{-- ============================================================
+     ABOUT COMSOC (UP-style intro block)
+     ============================================================ --}}
+<section id="about" class="py-16 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+                <p class="text-xs font-bold text-comsoc-600 uppercase tracking-widest mb-3">About COMSOC</p>
+                <h2 class="text-3xl sm:text-4xl font-black text-gray-900 leading-tight mb-5">
+                    Serving the students of<br>CCIS since day one.
+                </h2>
+                <p class="text-gray-600 text-base leading-relaxed mb-5">
+                    The Computer Society (COMSOC) is the official student organization of the
+                    College of Computing and Information Sciences at the University of Makati.
+                    We represent students in the programs of Computer Science, Information
+                    Technology, Diploma in IT, and Information Systems.
+                </p>
+                <p class="text-gray-600 text-base leading-relaxed mb-6">
+                    COMSOC Hub is our centralized digital platform — designed to reduce
+                    manual processes and keep members connected, informed, and engaged.
+                </p>
+                <div class="flex flex-wrap gap-3">
+                    @auth
+                        <a href="{{ url('/dashboard') }}"
+                           class="inline-flex items-center gap-2 px-5 py-2.5 bg-comsoc-700 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-800 transition-colors">
+                            Go to Dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('register') }}"
+                           class="inline-flex items-center gap-2 px-5 py-2.5 bg-comsoc-700 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-800 transition-colors">
+                            Create an account
+                        </a>
+                        <a href="{{ route('login') }}"
+                           class="inline-flex items-center gap-2 px-5 py-2.5 border border-comsoc-300 text-comsoc-700 text-sm font-semibold rounded-lg hover:bg-comsoc-50 transition-colors">
+                            Sign in
+                        </a>
+                    @endauth
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                @foreach([
+                    ['BSCS', 'Bachelor of Science in Computer Science', 'bg-comsoc-50 border-comsoc-200 text-comsoc-700'],
+                    ['BSIT', 'Bachelor of Science in Information Technology', 'bg-blue-50 border-blue-200 text-blue-700'],
+                    ['DIT',  'Diploma in Information Technology', 'bg-purple-50 border-purple-200 text-purple-700'],
+                    ['BSIS', 'Bachelor of Science in Information Systems', 'bg-orange-50 border-orange-200 text-orange-700'],
+                ] as [$code, $name, $style])
+                    <div class="border rounded-xl p-5 {{ $style }}">
+                        <p class="text-2xl font-black mb-1">{{ $code }}</p>
+                        <p class="text-xs font-medium leading-snug opacity-80">{{ $name }}</p>
                     </div>
                 @endforeach
             </div>
+        </div>
+    </div>
+</section>
+
+{{-- ============================================================
+     CCIS & COMSOC NEWS  (dynamic from official posts)
+     ============================================================ --}}
+<section id="features" class="py-16 bg-white border-t border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        @php
+            $newsItems = \App\Models\Post::with(['author', 'images'])
+                ->where('type', \App\Models\Post::TYPE_OFFICIAL)
+                ->where('is_hidden', false)
+                ->latest()
+                ->take(6)
+                ->get();
+        @endphp
+
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="section-bar text-2xl font-black text-gray-900">CCIS & COMSOC News</h2>
+            @if($newsItems->isNotEmpty())
+                @auth
+                    <a href="{{ route('community.index') }}" class="text-sm font-semibold text-comsoc-600 hover:text-comsoc-800 transition-colors">
+                        View all posts →
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="text-sm font-semibold text-comsoc-600 hover:text-comsoc-800 transition-colors">
+                        Sign in to see more →
+                    </a>
+                @endauth
+            @else
+                <a href="#officers" class="text-sm font-semibold text-comsoc-600 hover:text-comsoc-800 transition-colors">
+                    Meet the officers →
+                </a>
+            @endif
+        </div>
+
+        @if($newsItems->isEmpty())
+            {{-- Empty state — show platform features as fallback --}}
+            <div class="mb-6 flex items-center gap-3 p-4 bg-comsoc-50 border border-comsoc-100 rounded-xl">
+                <svg class="w-5 h-5 text-comsoc-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-sm text-comsoc-700">
+                    News and announcements posted by COMSOC officers will appear here.
+                    @auth
+                        <a href="{{ route('community.index') }}" class="font-semibold underline hover:text-comsoc-900">Visit the community feed</a> to see all posts.
+                    @else
+                        <a href="{{ route('login') }}" class="font-semibold underline hover:text-comsoc-900">Sign in</a> to access the full community feed.
+                    @endauth
+                </p>
+            </div>
+
+            {{-- Platform features as fallback content --}}
+            @php
+            $features = [
+                ['bg-comsoc-700', 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z', 'Membership Management', 'Academic-year membership tracking with status, program, and renewal history.'],
+                ['bg-blue-700',   'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', 'Event Management', 'Create, plan, and publish events with a full adviser approval workflow.'],
+                ['bg-purple-700', 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z', 'Event Registration', 'Students register directly. Capacity limits and deadlines enforced automatically.'],
+                ['bg-orange-600', 'M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z', 'QR Attendance', 'Officers scan QR passes at the venue. Attendance is recorded instantly.'],
+                ['bg-yellow-600', 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z', 'Digital Certificates', 'Eligible attendees receive certificates they can view and download.'],
+                ['bg-pink-700',   'M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z', 'COMSOC Community', 'A private org feed for announcements, discussions, and event updates.'],
+            ];
+            @endphp
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-0 border border-gray-200 rounded-2xl overflow-hidden">
+                @foreach($features as $i => [$bg, $icon, $title, $desc])
+                    <div class="news-card p-6 bg-white {{ !$loop->last ? 'border-b sm:border-b-0 sm:border-r border-gray-100' : '' }}
+                                {{ $loop->index >= 3 ? 'border-t border-gray-100' : '' }}">
+                        <div class="flex items-center justify-center w-11 h-11 rounded-xl {{ $bg }} mb-4">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $icon }}"/>
+                            </svg>
+                        </div>
+                        <h3 class="font-bold text-gray-900 text-base mb-1.5">{{ $title }}</h3>
+                        <p class="text-sm text-gray-500 leading-relaxed">{{ $desc }}</p>
+                    </div>
+                @endforeach
+            </div>
+
+        @else
+            {{-- NEWS GRID — UP style --}}
+            @php $featured = $newsItems->first(); $rest = $newsItems->skip(1); @endphp
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                {{-- Featured / lead story (left, spans 2 cols) --}}
+                <div class="lg:col-span-2">
+                    <div class="news-card bg-white border border-gray-200 rounded-2xl overflow-hidden h-full flex flex-col">
+                        {{-- Image or green placeholder --}}
+                        @if($featured->images->isNotEmpty())
+                            <img src="{{ asset('storage/' . $featured->images->first()->path) }}"
+                                 alt="News"
+                                 class="w-full h-56 object-cover"/>
+                        @else
+                            <div class="w-full h-56 bg-gradient-to-br from-comsoc-700 to-comsoc-900 flex items-center justify-center relative overflow-hidden">
+                                <div class="absolute inset-0" style="background-image:linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px);background-size:32px 32px"></div>
+                                <svg class="w-16 h-16 text-comsoc-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                </svg>
+                            </div>
+                        @endif
+                        <div class="flex-1 p-6">
+                            {{-- Badge --}}
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-comsoc-700 text-white text-[10px] font-bold uppercase tracking-widest">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                    </svg>
+                                    COMSOC Official
+                                </span>
+                                <span class="text-xs text-gray-400">{{ $featured->created_at->format('M d, Y') }}</span>
+                            </div>
+                            {{-- Title (first line of body) --}}
+                            <h3 class="text-xl font-black text-gray-900 mb-2 leading-snug line-clamp-2">
+                                {{ Str::limit($featured->body, 80) }}
+                            </h3>
+                            <p class="text-sm text-gray-500 leading-relaxed line-clamp-3 mb-4">
+                                {{ Str::limit($featured->body, 200) }}
+                            </p>
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <img src="{{ $featured->author->getProfilePictureUrl() }}"
+                                         class="w-7 h-7 rounded-full object-cover border border-gray-200"/>
+                                    <span class="text-xs font-semibold text-gray-600">{{ $featured->author->name }}</span>
+                                    <span class="text-xs text-gray-400">· {{ $featured->author->getRoleLabel() }}</span>
+                                </div>
+                                @auth
+                                    <a href="{{ route('community.index') }}"
+                                       class="text-xs font-semibold text-comsoc-600 hover:text-comsoc-800 transition-colors">
+                                        Read more →
+                                    </a>
+                                @else
+                                    <a href="{{ route('login') }}"
+                                       class="text-xs font-semibold text-comsoc-600 hover:text-comsoc-800 transition-colors">
+                                        Sign in to read →
+                                    </a>
+                                @endauth
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Sidebar news list --}}
+                <div class="flex flex-col gap-4">
+                    @foreach($rest->take(3) as $post)
+                        <div class="news-card bg-white border border-gray-200 rounded-xl overflow-hidden flex gap-0">
+                            {{-- Small image or colored strip --}}
+                            @if($post->images->isNotEmpty())
+                                <img src="{{ asset('storage/' . $post->images->first()->path) }}"
+                                     class="w-24 object-cover shrink-0"/>
+                            @else
+                                <div class="w-2 shrink-0 bg-comsoc-600"></div>
+                            @endif
+                            <div class="flex-1 p-4">
+                                <div class="flex items-center gap-1.5 mb-1.5">
+                                    <span class="text-[10px] font-bold text-comsoc-600 uppercase tracking-wide">Official</span>
+                                    <span class="text-gray-300">·</span>
+                                    <span class="text-[10px] text-gray-400">{{ $post->created_at->format('M d') }}</span>
+                                </div>
+                                <p class="text-sm font-bold text-gray-900 line-clamp-2 leading-snug mb-1.5">
+                                    {{ Str::limit($post->body, 90) }}
+                                </p>
+                                <p class="text-xs text-gray-400">{{ $post->author->name }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+
+                    {{-- See more link --}}
+                    @auth
+                        <a href="{{ route('community.index') }}"
+                           class="flex items-center justify-center gap-2 py-3 border-2 border-comsoc-200 rounded-xl text-sm font-semibold text-comsoc-700 hover:bg-comsoc-50 transition-colors">
+                            View all news
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}"
+                           class="flex items-center justify-center gap-2 py-3 border-2 border-comsoc-200 rounded-xl text-sm font-semibold text-comsoc-700 hover:bg-comsoc-50 transition-colors">
+                            Sign in for full access
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                    @endauth
+                </div>
+            </div>
+        @endif
+    </div>
+</section>
+
+{{-- ============================================================
+     UPCOMING EVENTS  (UP "Events" list style)
+     ============================================================ --}}
+<section id="events-preview" class="py-16 bg-gray-50 border-t border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="section-bar text-2xl font-black text-gray-900">Upcoming Events</h2>
+            @auth
+                <a href="{{ route('events.index') }}" class="text-sm font-semibold text-comsoc-600 hover:text-comsoc-800 transition-colors">
+                    See all events →
+                </a>
+            @else
+                <a href="{{ route('login') }}" class="text-sm font-semibold text-comsoc-600 hover:text-comsoc-800 transition-colors">
+                    Sign in to view →
+                </a>
+            @endauth
+        </div>
+
+        @php
+            $upcomingEvents = \App\Models\Event::whereIn('status', ['published', 'ongoing'])
+                ->where('event_date', '>=', now())
+                ->orderBy('event_date')
+                ->take(4)
+                ->get();
+        @endphp
+
+        @if($upcomingEvents->isEmpty())
+            <div class="bg-white border border-gray-200 rounded-xl p-10 text-center">
+                <svg class="w-12 h-12 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <p class="text-gray-400 font-medium text-sm">No upcoming events yet.</p>
+                <p class="text-gray-300 text-xs mt-1">Check back soon — events will appear here once published.</p>
+            </div>
+        @else
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                @foreach($upcomingEvents as $event)
+                    <div class="news-card bg-white border border-gray-200 rounded-xl overflow-hidden flex">
+                        {{-- Date badge --}}
+                        <div class="w-20 shrink-0 flex flex-col items-center justify-center bg-comsoc-700 text-white py-4">
+                            <p class="text-2xl font-black leading-none">{{ $event->event_date->format('d') }}</p>
+                            <p class="text-xs font-semibold uppercase tracking-wide mt-0.5">{{ $event->event_date->format('M') }}</p>
+                            <p class="text-[10px] text-comsoc-300 mt-0.5">{{ $event->event_date->format('Y') }}</p>
+                        </div>
+                        {{-- Content --}}
+                        <div class="flex-1 p-4">
+                            <p class="font-bold text-gray-900 text-sm leading-snug mb-1 line-clamp-2">{{ $event->title }}</p>
+                            <p class="text-xs text-gray-500 mb-2">
+                                📍 {{ $event->venue }}
+                                &nbsp;·&nbsp;
+                                🕐 {{ \Carbon\Carbon::parse($event->start_time)->format('g:i A') }}
+                            </p>
+                            @auth
+                                <a href="{{ route('events.show', $event) }}"
+                                   class="text-xs font-semibold text-comsoc-600 hover:text-comsoc-800 transition-colors">
+                                    View details →
+                                </a>
+                            @else
+                                <a href="{{ route('login') }}"
+                                   class="text-xs font-semibold text-comsoc-600 hover:text-comsoc-800 transition-colors">
+                                    Sign in to register →
+                                </a>
+                            @endauth
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+</section>
+
+{{-- ============================================================
+     OFFICERS  (UP "Voices" style grid)
+     ============================================================ --}}
+<section id="officers" class="py-16 bg-white border-t border-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+        <div class="flex items-center justify-between mb-2">
+            <h2 class="section-bar text-2xl font-black text-gray-900">Meet the Officers</h2>
+            <span class="text-xs text-gray-400 font-medium">Academic Year 2025–2026</span>
+        </div>
+        <p class="text-sm text-gray-500 mb-8 pl-4">The elected leaders of the Computer Society — CCIS, University of Makati.</p>
+
+        @php
+        $executives = [
+            ['President',                          'Alexandra Reyes',       'CS',  'bg-yellow-100 text-yellow-800'],
+            ['VP for Internal Affairs',             'Benjamin Cruz',         'IT',  'bg-comsoc-100 text-comsoc-800'],
+            ['VP for External Affairs',             'Christine Lim',         'IT',  'bg-comsoc-100 text-comsoc-800'],
+            ['Secretary',                           'Daniel Ocampo',         'CS',  'bg-blue-100 text-blue-800'],
+            ['Treasurer',                           'Erica Santos',          'IS',  'bg-purple-100 text-purple-800'],
+            ['Auditor',                             'Francis Dela Torre',    'CS',  'bg-red-100 text-red-800'],
+            ['Public Relations Officer',            'Gabrielle Mendoza',     'IT',  'bg-pink-100 text-pink-800'],
+        ];
+        $progReps = [
+            ['CS Rep',    'Harold Bautista',   'BSCS'],
+            ['IT Rep',    'Isabelle Tan',       'BSIT'],
+            ['Diploma Rep','James Navarro',     'DIT'],
+            ['IS Rep',    'Karen Villanueva',   'BSIS'],
+        ];
+        @endphp
+
+        {{-- Executive officers --}}
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4 mb-10">
+            @foreach($executives as [$position, $name, $program, $badge])
+                <div class="news-card bg-white border border-gray-200 rounded-xl p-4 text-center">
+                    {{-- Photo placeholder --}}
+                    <div class="relative mx-auto mb-3 w-16 h-16 rounded-full overflow-hidden border-2 border-comsoc-200 bg-gradient-to-br from-comsoc-100 to-comsoc-200 flex items-center justify-center">
+                        <svg class="w-8 h-8 text-comsoc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <p class="font-bold text-gray-900 text-xs leading-tight mb-1.5">{{ $name }}</p>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {{ $badge }}">
+                        {{ strlen($position) > 18 ? substr($position, 0, 3) . '...' : $position }}
+                    </span>
+                    <p class="text-[10px] text-gray-400 mt-1.5">{{ $position }}</p>
+                </div>
+            @endforeach
         </div>
 
         {{-- Program Representatives --}}
-        <div>
-            <p class="text-comsoc-400 text-xs font-bold tracking-widest uppercase text-center mb-8">Program Representatives</p>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-5 max-w-3xl mx-auto">
-                @foreach ($progReps as $idx => [$position, $name, $code, $program])
-                    <div class="reveal delay-{{ $idx * 100 }} lift bg-comsoc-900/50 border border-comsoc-700/40 rounded-2xl p-5 text-center hover:border-purple-500/60 transition-all">
-                        <div class="flex justify-center mb-4">
-                            <div class="officer-ring">
-                                <div class="officer-ring-inner w-16 h-16">
-                                    <div class="photo-placeholder w-16 h-16 flex items-center justify-center">
-                                        <svg class="w-7 h-7 text-comsoc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
+        <div class="border-t border-gray-100 pt-8">
+            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Program Representatives</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                @foreach($progReps as [$role, $name, $code])
+                    <div class="news-card bg-comsoc-50 border border-comsoc-100 rounded-xl p-4 flex items-center gap-3">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-full bg-comsoc-200 shrink-0">
+                            <svg class="w-5 h-5 text-comsoc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
                         </div>
-                        <p class="font-bold text-white text-sm leading-tight">{{ $name }}</p>
-                        <span class="inline-flex items-center mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gradient-to-r from-purple-600 to-purple-800 text-white">
-                            {{ $code }}
-                        </span>
-                        <p class="text-comsoc-500 text-[11px] mt-2 leading-tight">{{ $program }}</p>
+                        <div class="min-w-0">
+                            <p class="font-bold text-comsoc-800 text-xs truncate">{{ $name }}</p>
+                            <p class="text-[10px] text-comsoc-600 font-semibold">{{ $code }} — {{ $role }}</p>
+                        </div>
                     </div>
                 @endforeach
             </div>
         </div>
 
-        {{-- Photo upload note --}}
-        <p class="text-center text-comsoc-600 text-xs mt-10 reveal">
-            <svg class="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <p class="mt-6 text-xs text-gray-400 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             Officer photos will be uploaded via the admin dashboard.
@@ -471,181 +668,140 @@
     </div>
 </section>
 
-{{-- ========================================================
-     ROLES
-     ======================================================== --}}
-<section id="roles" class="py-24 bg-gray-50">
+{{-- ============================================================
+     NEWS / HOW IT WORKS  (UP "News" style)
+     ============================================================ --}}
+<section id="news" class="py-16 bg-gray-50 border-t border-gray-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="text-center mb-16 reveal">
-            <span class="inline-flex items-center px-3 py-1 rounded-full bg-comsoc-100 text-comsoc-700 text-xs font-bold tracking-widest uppercase mb-4">
-                Role-Based Access
-            </span>
-            <h2 class="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Built for everyone in COMSOC</h2>
-            <p class="mt-4 text-gray-500 text-lg max-w-xl mx-auto">Every user sees exactly what they need — no more, no less.</p>
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="section-bar text-2xl font-black text-gray-900">How It Works</h2>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             @foreach([
-                ['Student',       'M12 14l9-5-9-5-9 5 9 5z',                                                                                                                                                                                                              ['Browse & register for events','View attendance history','Download certificates','Community feed'],                   'bg-blue-50 text-blue-700 border-blue-100'],
-                ['Member',        'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z',                           ['All student features','Membership dashboard','Community posting','Member-only content'],                             'bg-comsoc-50 text-comsoc-700 border-comsoc-100'],
-                ['Officer',       'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z',                                       ['Create & manage events','Committee management','Document submission','Task tracking'],                               'bg-purple-50 text-purple-700 border-purple-100'],
-                ['President',     'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',  ['Organization overview','Officer management','Event monitoring','Full reports'],                                     'bg-yellow-50 text-yellow-700 border-yellow-100'],
-                ['Adviser',       'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',                                                                                      ['Review event proposals','Approve/reject events','Document approvals','Approval history'],                          'bg-teal-50 text-teal-700 border-teal-100'],
-                ['Prog. Rep',     'M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z',                                                                                                                                        ['Program communications','Student outreach','Assigned tasks','Community announcements'],                             'bg-pink-50 text-pink-700 border-pink-100'],
-                ['Admin',         'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z', ['User & role management','System configuration','Audit log access','Full platform control'],                       'bg-red-50 text-red-700 border-red-100'],
-            ] as $ri => [$role, $icon, $perms, $badge])
-                <div class="lift reveal delay-{{ min($ri * 100, 600) }} bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+                ['1', 'M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z', 'Register & Join', 'Create your account, choose your program, and become part of COMSOC.'],
+                ['2', 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', 'Discover Events', 'Browse published events, view details, and register directly on the platform.'],
+                ['3', 'M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z', 'Attend & Check In', 'Show your QR pass. Officers scan it — attendance recorded instantly.'],
+                ['4', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z', 'Get Your Certificate', 'If eligible, your certificate is automatically issued and downloadable.'],
+            ] as [$step, $icon, $title, $desc])
+                <div class="news-card bg-white border border-gray-200 rounded-xl p-6">
                     <div class="flex items-center gap-3 mb-4">
-                        <div class="flex items-center justify-center w-10 h-10 rounded-xl {{ $badge }} border">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-comsoc-700 shrink-0">
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $icon }}"/>
                             </svg>
                         </div>
-                        <span class="font-bold text-gray-900 text-sm">{{ $role }}</span>
+                        <span class="text-4xl font-black text-gray-100 select-none leading-none">{{ $step }}</span>
                     </div>
-                    <ul class="space-y-2">
-                        @foreach($perms as $perm)
-                            <li class="flex items-center gap-2 text-xs text-gray-500">
-                                <svg class="w-3 h-3 text-comsoc-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
-                                </svg>
-                                {{ $perm }}
-                            </li>
-                        @endforeach
-                    </ul>
+                    <h3 class="font-bold text-gray-900 text-base mb-1.5">{{ $title }}</h3>
+                    <p class="text-sm text-gray-500 leading-relaxed">{{ $desc }}</p>
                 </div>
             @endforeach
         </div>
     </div>
 </section>
 
-{{-- ========================================================
-     CTA
-     ======================================================== --}}
-<section class="py-24 bg-white">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="reveal-scale relative bg-gradient-to-br from-comsoc-800 via-comsoc-900 to-comsoc-950 rounded-3xl overflow-hidden p-10 sm:p-16 text-center shadow-2xl">
-            <div class="absolute inset-0 hero-grid opacity-25 pointer-events-none"></div>
-            <div class="absolute -top-24 -right-24 w-72 h-72 rounded-full pointer-events-none"
-                 style="background:radial-gradient(circle,rgba(234,179,8,.18) 0%,transparent 70%)"></div>
-            <div class="absolute -bottom-24 -left-24 w-72 h-72 rounded-full pointer-events-none"
-                 style="background:radial-gradient(circle,rgba(22,163,74,.18) 0%,transparent 70%)"></div>
-            <div class="relative z-10">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-white/10 backdrop-blur mb-6">
-                    <svg class="w-8 h-8 text-gold-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
-                              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                    </svg>
-                </div>
-                <h2 class="text-3xl sm:text-4xl font-black text-white mb-4 tracking-tight">Ready to join COMSOC Hub?</h2>
-                <p class="text-comsoc-200 text-lg mb-8 max-w-xl mx-auto">
-                    Connect with the Computer Society of CCIS and manage everything in one place.
-                </p>
-                @auth
-                    <a href="{{ url('/dashboard') }}"
-                       class="inline-flex items-center gap-2 px-8 py-4 bg-white text-comsoc-900 font-bold rounded-xl hover:bg-comsoc-50 transition-all shadow-xl text-base">
-                        Go to Dashboard
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                        </svg>
-                    </a>
-                @else
-                    <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                        <a href="{{ route('register') }}"
-                           class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-comsoc-900 font-bold rounded-xl hover:bg-comsoc-50 transition-all shadow-xl text-base">
-                            Create a free account
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-                            </svg>
-                        </a>
-                        <a href="{{ route('login') }}"
-                           class="inline-flex items-center justify-center px-8 py-4 border-2 border-white/20 text-white font-bold rounded-xl hover:bg-white/10 transition-all text-base">
-                            Sign in
-                        </a>
-                    </div>
-                    <p class="mt-5 text-comsoc-500 text-sm">Free to join · No payment required</p>
-                @endauth
+{{-- ============================================================
+     CTA BANNER
+     ============================================================ --}}
+<section class="py-14 bg-comsoc-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h2 class="text-2xl sm:text-3xl font-black text-white mb-3">Ready to join COMSOC Hub?</h2>
+        <p class="text-comsoc-200 mb-7">Connect with the Computer Society of CCIS — free to join, no payment required.</p>
+        @auth
+            <a href="{{ url('/dashboard') }}"
+               class="inline-flex items-center gap-2 px-7 py-3 bg-white text-comsoc-900 font-bold rounded-xl hover:bg-comsoc-50 transition-colors shadow-lg text-sm">
+                Go to Dashboard
+            </a>
+        @else
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <a href="{{ route('register') }}"
+                   class="inline-flex items-center justify-center gap-2 px-7 py-3 bg-white text-comsoc-900 font-bold rounded-xl hover:bg-comsoc-50 transition-colors shadow-lg text-sm">
+                    Create an account
+                </a>
+                <a href="{{ route('login') }}"
+                   class="inline-flex items-center justify-center px-7 py-3 border-2 border-white/25 text-white font-bold rounded-xl hover:bg-white/10 transition-colors text-sm">
+                    Sign in
+                </a>
             </div>
-        </div>
+        @endauth
     </div>
 </section>
 
-{{-- ========================================================
-     FOOTER
-     ======================================================== --}}
-<footer class="bg-gray-950 border-t border-gray-800/60">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-10">
-            <div>
+{{-- ============================================================
+     FOOTER  (UP-style multi-column)
+     ============================================================ --}}
+<footer class="bg-comsoc-950 border-t border-comsoc-900">
+
+    {{-- Main footer columns --}}
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+
+            {{-- Brand --}}
+            <div class="lg:col-span-1">
                 <div class="flex items-center gap-2.5 mb-4">
-                    <div class="flex items-center justify-center w-8 h-8 rounded-lg bg-comsoc-700">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                        </svg>
+                    <img src="{{ asset('images/comsoc_logo.png') }}"
+                         alt="COMSOC Logo"
+                         class="w-9 h-9 object-contain shrink-0"/>
+                    <div>
+                        <span class="block font-black text-white text-sm">COMSOC Hub</span>
+                        <span class="block text-[10px] text-comsoc-400">CCIS · University of Makati</span>
                     </div>
-                    <span class="font-bold text-white text-base">COMSOC Hub</span>
                 </div>
-                <p class="text-sm text-gray-500 leading-relaxed">
-                    The centralized digital platform for the Computer Society of CCIS, University of Makati.
+                <p class="text-sm text-comsoc-400 leading-relaxed">
+                    The centralized digital platform for the Computer Society of CCIS.
                 </p>
             </div>
+
+            {{-- Platform --}}
             <div>
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-5">Platform</p>
-                <ul class="space-y-3">
-                    @foreach(['Features'=>'#features','How It Works'=>'#how-it-works','Officers'=>'#officers','Roles'=>'#roles'] as $l=>$h)
-                        <li><a href="{{ $h }}" class="text-sm text-gray-500 hover:text-white transition-colors">{{ $l }}</a></li>
+                <p class="text-[11px] font-bold text-comsoc-400 uppercase tracking-widest mb-4">Platform</p>
+                <ul class="space-y-2.5">
+                    @foreach(['About COMSOC'=>'#about','Features'=>'#features','Upcoming Events'=>'#events-preview','Officers'=>'#officers','How It Works'=>'#news'] as $l => $h)
+                        <li><a href="{{ $h }}" class="text-sm text-comsoc-400 hover:text-white transition-colors">{{ $l }}</a></li>
                     @endforeach
                 </ul>
             </div>
+
+            {{-- Account --}}
             <div>
-                <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-5">Account</p>
-                <ul class="space-y-3">
+                <p class="text-[11px] font-bold text-comsoc-400 uppercase tracking-widest mb-4">Account</p>
+                <ul class="space-y-2.5">
                     @auth
-                        <li><a href="{{ url('/dashboard') }}" class="text-sm text-gray-500 hover:text-white transition-colors">Dashboard</a></li>
-                        <li><a href="{{ route('profile.edit') }}" class="text-sm text-gray-500 hover:text-white transition-colors">Profile</a></li>
+                        <li><a href="{{ url('/dashboard') }}" class="text-sm text-comsoc-400 hover:text-white transition-colors">Dashboard</a></li>
+                        <li><a href="{{ route('community.index') }}" class="text-sm text-comsoc-400 hover:text-white transition-colors">Community</a></li>
+                        <li><a href="{{ route('events.index') }}" class="text-sm text-comsoc-400 hover:text-white transition-colors">Events</a></li>
+                        <li><a href="{{ route('membership.index') }}" class="text-sm text-comsoc-400 hover:text-white transition-colors">My Membership</a></li>
+                        <li><a href="{{ route('profile.edit') }}" class="text-sm text-comsoc-400 hover:text-white transition-colors">Profile</a></li>
                     @else
-                        <li><a href="{{ route('login') }}" class="text-sm text-gray-500 hover:text-white transition-colors">Sign in</a></li>
-                        <li><a href="{{ route('register') }}" class="text-sm text-gray-500 hover:text-white transition-colors">Create account</a></li>
+                        <li><a href="{{ route('login') }}" class="text-sm text-comsoc-400 hover:text-white transition-colors">Sign in</a></li>
+                        <li><a href="{{ route('register') }}" class="text-sm text-comsoc-400 hover:text-white transition-colors">Create account</a></li>
                     @endauth
                 </ul>
             </div>
+
+            {{-- Programs --}}
+            <div>
+                <p class="text-[11px] font-bold text-comsoc-400 uppercase tracking-widest mb-4">Programs</p>
+                <ul class="space-y-2.5">
+                    @foreach(['BSCS — Computer Science','BSIT — Information Technology','DIT — Diploma in IT','BSIS — Information Systems'] as $p)
+                        <li><p class="text-sm text-comsoc-400">{{ $p }}</p></li>
+                    @endforeach
+                </ul>
+            </div>
         </div>
-        <div class="border-t border-gray-800/60 pt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p class="text-xs text-gray-600">&copy; {{ date('Y') }} Computer Society · CCIS · University of Makati. All rights reserved.</p>
-            <p class="text-xs text-gray-700">COMSOC Hub v1.0</p>
+    </div>
+
+    {{-- Bottom bar --}}
+    <div class="border-t border-comsoc-800/60">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p class="text-xs text-comsoc-600">
+                &copy; {{ date('Y') }} Computer Society · College of Computing and Information Sciences · University of Makati
+            </p>
+            <p class="text-xs text-comsoc-700">COMSOC Hub v1.0</p>
         </div>
     </div>
 </footer>
-
-{{-- ========================================================
-     SCROLL REVEAL SCRIPT
-     ======================================================== --}}
-<script>
-(function () {
-    const selectors = ['.reveal', '.reveal-left', '.reveal-right', '.reveal-scale'];
-    const targets = document.querySelectorAll(selectors.join(','));
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target);
-            }
-        });
-    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-
-    targets.forEach(el => observer.observe(el));
-
-    // Trigger elements already in view on load
-    setTimeout(() => {
-        targets.forEach(el => {
-            const rect = el.getBoundingClientRect();
-            if (rect.top < window.innerHeight) el.classList.add('visible');
-        });
-    }, 80);
-})();
-</script>
 
 </body>
 </html>

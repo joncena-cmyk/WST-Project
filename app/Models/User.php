@@ -114,6 +114,7 @@ class User extends Authenticatable
         return in_array($this->role, [
             self::ROLE_OFFICER,
             self::ROLE_PRESIDENT,
+            self::ROLE_ADVISER,
             self::ROLE_ADMIN,
         ]);
     }
