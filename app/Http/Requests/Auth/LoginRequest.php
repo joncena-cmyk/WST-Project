@@ -46,6 +46,13 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            $existingUser = \App\Models\User::where('email', strtolower($this->string('email')))->first();
+            if ($existingUser && $existingUser->google_id) {
+                throw ValidationException::withMessages([
+                    'email' => 'These credentials do not match. Since this account was linked with Google, please sign in with Google or use "Forgot your password?" below to create a manual login password.',
+                ]);
+            }
+
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);

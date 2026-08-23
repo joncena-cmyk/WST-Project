@@ -1,15 +1,18 @@
 <?php
 
+use App\Http\Controllers\Admin\AuditLogController as AdminAuditLogController;
 use App\Http\Controllers\Admin\MembershipController as AdminMembershipController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\AnalyticsReportController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommitteeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentReviewController;
+use App\Http\Controllers\ElectionController;
 use App\Http\Controllers\EventApprovalController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventRegistrationController;
@@ -19,6 +22,7 @@ use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\VotingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -189,6 +193,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // -----------------------------------------------------------------------
+    // Elections & Voting Hub (Phase 10)
+    // -----------------------------------------------------------------------
+    Route::prefix('elections')->name('elections.')->group(function () {
+        Route::get('/',                                  [ElectionController::class, 'index'])->name('index');
+        Route::get('/create',                            [ElectionController::class, 'create'])->name('create');
+        Route::post('/',                                 [ElectionController::class, 'store'])->name('store');
+        Route::get('/{election}',                        [ElectionController::class, 'show'])->name('show');
+        Route::get('/{election}/edit',                   [ElectionController::class, 'edit'])->name('edit');
+        Route::put('/{election}',                        [ElectionController::class, 'update'])->name('update');
+        Route::delete('/{election}',                     [ElectionController::class, 'destroy'])->name('destroy');
+        Route::post('/{election}/status',                [ElectionController::class, 'transitionStatus'])->name('status');
+
+        // Candidacy filing
+        Route::post('/{election}/apply',                 [CandidateController::class, 'store'])->name('apply');
+
+        // Voting Booth & Results
+        Route::get('/{election}/vote',                   [VotingController::class, 'show'])->name('vote');
+        Route::post('/{election}/vote',                  [VotingController::class, 'cast'])->name('vote.cast');
+        Route::get('/{election}/results',                [VotingController::class, 'results'])->name('results');
+    });
+
+    // Candidates Review Queue (Officers & Advisers)
+    Route::prefix('candidates')->name('candidates.')->group(function () {
+        Route::get('/',                                  [CandidateController::class, 'index'])->name('index');
+        Route::post('/{candidate}/review',              [CandidateController::class, 'review'])->name('review');
+    });
+
+    // -----------------------------------------------------------------------
     // Admin — User Management (admin only)
     // -----------------------------------------------------------------------
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -202,6 +234,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('memberships',                  [AdminMembershipController::class, 'store'])->name('memberships.store');
         Route::get('memberships/{membership}/edit', [AdminMembershipController::class, 'edit'])->name('memberships.edit');
         Route::patch('memberships/{membership}',    [AdminMembershipController::class, 'update'])->name('memberships.update');
+
+        // Security & Audit Logs (Phase 9)
+        Route::get('audit-logs',                    [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
     });
 });
 

@@ -489,62 +489,50 @@ Replaces the static dashboard with specialized role-specific dashboards, an orga
 
 ---
 
-### Phase 9 — Security Hardening, Audit Logging & Scheduled Jobs
+### Phase 9 — Security Hardening, Audit Logging & Scheduled Jobs (Completed)
+System-wide immutable security logging, administrator audit explorer, and automated console background jobs.
 
-**Planned table:** `audit_logs`
-
-**Audit events to log:**
-- Login / Logout / Failed login
-- Role changes (by whom, from what role, to what role)
-- Account suspension / reactivation
-- Event creation, submission, approval, rejection, cancellation
-- Document submission, approval, rejection
-- Attendance recording
-- Certificate issuance / revocation
-- Post moderation (hide, report resolution)
-- User deletion
-- Election creation, candidate approval, voting submission, result publication *(Phase 10)*
-- Partnership creation, status changes, document actions *(Phase 11)*
-
-**Scheduled jobs planned:**
-- Auto-transition events: `published` → `ongoing` (at `event_date + start_time`), `ongoing` → `completed` (at `event_date + end_time`)
-- Auto-expire memberships past `end_date`
-
-**Email notifications planned (Mailables):**
-- Event registration confirmation
-- Event cancellation notice to registered users
-- Adviser notified when event is submitted for review
-- Officer notified when event is approved / returned / rejected
-- Certificate issued notification
-
-**Other hardening:**
-- Rate limiting on auth routes, report submission, like toggle
-- Full input sanitization audit
-- File upload security review (type, size, storage path)
-- Policy coverage audit — ensure every sensitive route is policy-gated
+#### Completed Features:
+- **Audit Logging Subsystem**:
+  - Migration & table `audit_logs` (`id`, `user_id`, `action`, `description`, `ip_address`, `user_agent`, `auditable_type`, `auditable_id`, `properties`, `created_at`).
+  - Model `App\Models\AuditLog` with static recording method `AuditLog::record(...)`.
+  - Automatic audit recording across core actions: logins, role updates, suspensions, event lifecycle, document reviews, candidacy approvals, secret ballot voting.
+- **Admin Audit Log Console**:
+  - Filterable by action type, searchable by user name/email/IP, with JSON property inspector at `/admin/audit-logs`.
+- **Scheduled Console Tasks**:
+  - `php artisan events:update-statuses`: Evaluates date and time boundaries to auto-transition published events to `ongoing` and `completed`.
+  - `php artisan memberships:expire`: Automatically marks lapsed student memberships past `end_date` as `expired`.
+  - Schedules registered in `routes/console.php`.
+- **Automated Tests**: 4 feature tests in `AuditLogTest.php` and `ScheduledJobsTest.php`.
 
 ---
 
-### Phase 10 — Election & Voting Management
-*(Promoted from future-only to planned module per updated spec)*
+### Phase 10 — Election & Voting Management (Completed)
+Democratized student governance hub featuring role-governed election lifecycles, candidacy filing & review queues, and cryptographic secret ballot voting.
 
-Actual online voting requires additional security requirements and university approval before going live. Architecture will be built in this phase but activation is conditional.
+#### Completed Features:
+- **Database Architecture**:
+  - `elections` (`id`, `title`, `description`, `academic_year`, `filing_start_at`, `filing_end_at`, `voting_start_at`, `voting_end_at`, `status`, `created_by`).
+  - `election_positions` (`id`, `election_id`, `title`, `description`, `order`, `max_winners`).
+  - `candidates` (`id`, `election_id`, `position_id`, `user_id`, `platform`, `party_name`, `status`, `reviewed_by`, `reviewed_at`, `review_remarks`).
+  - `voter_participations` (`id`, `election_id`, `user_id`, `voted_at`) to strictly prevent double-voting.
+  - `votes` (`id`, `election_id`, `position_id`, `candidate_id`, `voter_hash`, `created_at`) storing salted one-way hash anonymized ballots.
+- **Election Lifecycle**:
+  - State machine: `draft` $\rightarrow$ `filing_open` $\rightarrow$ `voting_open` $\rightarrow$ `closed` $\rightarrow$ `results_published`.
+- **Candidacy Review Workflow**:
+  - Students file candidacies with party slates and platform vision statements.
+  - Officers/Advisers review queue at `/candidates` to approve or reject applicants.
+- **Secret Ballot Voting Booth**:
+  - Clean, distraction-free ballot interface at `/elections/{id}/vote` with candidate platforms and abstain options.
+- **Official Results & Tallies**:
+  - Interactive vote tallying, percentage bar progress indicators, and elected officer certifications at `/elections/{id}/results`.
+- **Sidebar Integration**:
+  - Added **Elections** to main navigation and **Audit Logs** to Super Admin management in `resources/views/layouts/partials/sidebar.blade.php`.
+- **Automated Tests**: 6 feature tests in `ElectionTest.php` and `VotingTest.php`.
 
-**Planned tables:** `elections`, `election_positions`, `candidates`, `candidate_documents`, `voter_eligibilities`, `ballots`, `votes`, `election_results`
+---
 
-**Planned features:**
-- Election creation with positions and election period
-- Candidate filing — eligible members submit candidacy
-- Candidate documents upload and officer/adviser review
-- Candidate approval workflow
-- Voter eligibility rules (active membership required, program-scoped where applicable)
-- Ballot generation per eligible voter
-- Voting interface with confirmation
-- Vote integrity: one vote per eligible voter per position, immutable once cast
-- Result tallying and publication by authorized officer/admin
-- Audit trail for all election actions
-
-**Audit events:** Election creation, candidate approval, election status changes, voting submission, result publication
+## What's Next — Planned Phases
 
 ---
 
