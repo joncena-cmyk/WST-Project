@@ -233,6 +233,14 @@
                             Participants ({{ $event->registeredCount() }})
                         </a>
 
+                        <a href="{{ route('documents.index', ['event_id' => $event->id]) }}"
+                           class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-50 border border-blue-200 text-sm font-semibold text-blue-800 rounded-lg hover:bg-blue-100 transition-colors">
+                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            Documents ({{ $event->documents()->count() }})
+                        </a>
+
                         @if(in_array($event->status, [\App\Models\Event::STATUS_PUBLISHED, \App\Models\Event::STATUS_ONGOING, \App\Models\Event::STATUS_COMPLETED]))
                             <a href="{{ route('attendance.scanner', $event) }}"
                                class="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-500 text-white text-sm font-semibold rounded-lg hover:bg-yellow-600 transition-colors shadow-sm">

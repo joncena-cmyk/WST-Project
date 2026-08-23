@@ -439,24 +439,26 @@ These are no longer placeholder or future-only phases. They are part of the plan
 | `committees` | Event-scoped functional committees |
 | `committee_members` | Committee member assignments and roles |
 | `event_tasks` | Event and committee task tracking records |
+| `documents` | Organization proposals, reservation letters, budget forms, and reports |
+| `document_reviews` | Formal review decisions and remarks timeline from Adviser |
+
+---
+
+### Phase 7 — Documents & Approval Workflow (Completed)
+Replaces physical/email document routing for reservation letters, proposals, budget forms, and post-event reports with a formal, role-governed document approval lifecycle.
+
+#### Completed Features:
+- **Private Secure Storage**: Uploaded files stored exclusively in private storage (`storage/app/documents`) and streamed only through authenticated, policy-verified endpoints (`/documents/{id}/download` and `/documents/{id}/preview`).
+- **Document Categories**: Event Activity Proposals, Venue Reservation Letters, Budget Requests, Letters of Intent, Accomplishment Reports, and General Documents.
+- **Approval State Machine**: `draft` $\rightarrow$ `submitted` $\rightarrow$ `under_review` $\rightarrow$ `approved` / `returned` / `rejected`.
+- **Revision Versioning**: When a document is returned for revisions, officers can replace the attachment file, automatically incrementing the version (v1 $\rightarrow$ v2) while maintaining review audit history.
+- **Adviser Review Console**: Dedicated review queue with pending submission counter badges, PDF in-browser preview, and decision modals with mandatory/optional remarks.
+- **Navigation & Integration**: Unlocked Documents item in main sidebar with pending review badges, and integrated Event Documents list directly on event detail pages.
+- **Automated Tests**: 9 comprehensive feature tests in `DocumentTest.php` and `DocumentReviewTest.php`.
 
 ---
 
 ## What's Next — Planned Phases
-
----
-
-### Phase 7 — Documents & Approval workflow
-Replaces physical/email document routing for reservation letters, proposals, budget forms, etc.
-
-**Planned tables:** `documents`, `document_reviews`
-
-- Officers upload documents with category and optional event association
-- Statuses: `draft`, `submitted`, `under_review`, `returned`, `approved`, `rejected`
-- Adviser reviews, approves, returns, or rejects with remarks
-- Secure file storage — documents must NOT be served via public URLs
-- Approval history per document
-- Document categories: reservation letter, letter of intent, budget request, event proposal, event report, other
 
 ---
 

@@ -108,6 +108,16 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withTimestamps();
     }
 
+    public function uploadedDocuments(): HasMany
+    {
+        return $this->hasMany(Document::class, 'uploaded_by');
+    }
+
+    public function documentReviews(): HasMany
+    {
+        return $this->hasMany(DocumentReview::class, 'reviewed_by');
+    }
+
     public function activeMembership(): ?Membership
     {
         return $this->memberships()

@@ -112,6 +112,11 @@ class Event extends Model
         return $this->hasMany(EventTask::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class);
+    }
+
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------

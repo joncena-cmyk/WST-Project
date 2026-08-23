@@ -6,6 +6,8 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommitteeController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\DocumentReviewController;
 use App\Http\Controllers\EventApprovalController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventRegistrationController;
@@ -136,6 +138,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{committee}',                   [CommitteeController::class, 'destroy'])->name('destroy');
         Route::post('/{committee}/members',             [CommitteeController::class, 'addMember'])->name('members.store');
         Route::delete('/{committee}/members/{user}',    [CommitteeController::class, 'removeMember'])->name('members.destroy');
+    });
+
+    // -----------------------------------------------------------------------
+    // Documents & Approvals (Phase 7)
+    // -----------------------------------------------------------------------
+    Route::prefix('documents')->name('documents.')->group(function () {
+        Route::get('/',                     [DocumentController::class, 'index'])->name('index');
+        Route::get('/create',               [DocumentController::class, 'create'])->name('create');
+        Route::post('/',                    [DocumentController::class, 'store'])->name('store');
+        Route::get('/{document}',           [DocumentController::class, 'show'])->name('show');
+        Route::get('/{document}/edit',      [DocumentController::class, 'edit'])->name('edit');
+        Route::put('/{document}',           [DocumentController::class, 'update'])->name('update');
+        Route::delete('/{document}',        [DocumentController::class, 'destroy'])->name('destroy');
+        Route::post('/{document}/submit',   [DocumentController::class, 'submit'])->name('submit');
+        Route::get('/{document}/download',  [DocumentController::class, 'download'])->name('download');
+        Route::get('/{document}/preview',   [DocumentController::class, 'preview'])->name('preview');
+    });
+
+    // Adviser Document Review Queue
+    Route::prefix('documents-review')->name('documents.review.')->group(function () {
+        Route::get('/',                     [DocumentReviewController::class, 'index'])->name('index');
+        Route::get('/{document}',           [DocumentReviewController::class, 'show'])->name('show');
+        Route::post('/{document}',          [DocumentReviewController::class, 'review'])->name('process');
     });
 
     // -----------------------------------------------------------------------
