@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -44,6 +45,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'google_id',
+        'avatar',
         'password',
         'student_id',
         'program_id',
@@ -76,6 +79,33 @@ class User extends Authenticatable
     public function memberships(): HasMany
     {
         return $this->hasMany(Membership::class);
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    public function assignedTasks(): HasMany
+    {
+        return $this->hasMany(EventTask::class, 'assigned_to');
+    }
+
+    public function committeeMemberships(): HasMany
+    {
+        return $this->hasMany(CommitteeMember::class);
+    }
+
+    public function headedCommittees(): HasMany
+    {
+        return $this->hasMany(Committee::class, 'head_user_id');
+    }
+
+    public function committees()
+    {
+        return $this->belongsToMany(Committee::class, 'committee_members')
+            ->withPivot('role_in_committee')
+            ->withTimestamps();
     }
 
     public function activeMembership(): ?Membership
@@ -148,6 +178,10 @@ class User extends Authenticatable
     {
         if ($this->profile_picture) {
             return asset('storage/' . $this->profile_picture);
+        }
+
+        if ($this->avatar) {
+            return $this->avatar;
         }
 
         // Generate a consistent avatar using initials via UI Avatars

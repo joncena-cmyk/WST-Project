@@ -30,10 +30,21 @@
             </x-primary-button>
         </form>
 
+        <form method="POST" action="{{ route('verification.skip') }}">
+            @csrf
+            <button type="submit"
+                    class="w-full text-center text-sm font-semibold text-comsoc-700 bg-comsoc-50 hover:bg-comsoc-100 border border-comsoc-200 rounded-md py-2.5 transition duration-150 shadow-sm flex items-center justify-center gap-1.5">
+                <span>{{ __('Skip for now (Continue to Dashboard)') }}</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                </svg>
+            </button>
+        </form>
+
         <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit"
-                    class="w-full text-center text-sm text-gray-500 hover:text-gray-700 py-2">
+                    class="w-full text-center text-sm text-gray-500 hover:text-gray-700 py-1.5">
                 {{ __('Log out') }}
             </button>
         </form>

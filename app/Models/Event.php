@@ -92,6 +92,26 @@ class Event extends Model
         return $this->hasMany(EventRegistration::class)->where('status', 'registered');
     }
 
+    public function attendance(): HasMany
+    {
+        return $this->hasMany(EventAttendance::class);
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    public function committees(): HasMany
+    {
+        return $this->hasMany(Committee::class);
+    }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(EventTask::class);
+    }
+
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------

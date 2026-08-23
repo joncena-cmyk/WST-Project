@@ -8,41 +8,58 @@
     </x-slot>
 
     <div class="max-w-3xl mx-auto">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 sm:p-8">
-            <h2 class="text-lg font-bold text-gray-900 mb-6">New Event</h2>
+        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 sm:p-8">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Create New Event</h2>
+
+            {{-- Validation Error Banner --}}
+            @if ($errors->any())
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                    <div class="flex items-center gap-2 font-bold mb-1">
+                        <svg class="w-5 h-5 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Please fix the following errors:
+                    </div>
+                    <ul class="list-disc list-inside space-y-0.5 text-xs text-red-600 pl-6">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <form method="POST" action="{{ route('events.store') }}" enctype="multipart/form-data" class="space-y-6">
                 @csrf
 
                 {{-- Title --}}
                 <div>
-                    <x-input-label for="title" value="Event Title" />
+                    <x-input-label for="title" value="Event Title *" />
                     <x-text-input id="title" name="title" type="text"
                                   :value="old('title')" required
-                                  placeholder="e.g. Cybersecurity Seminar 2025"
+                                  placeholder="e.g. Cybersecurity Summit 2026"
                                   class="mt-1 block w-full" />
                     <x-input-error :messages="$errors->get('title')" class="mt-1" />
                 </div>
 
                 {{-- Description --}}
                 <div>
-                    <x-input-label for="description" value="Description" />
+                    <x-input-label for="description" value="Description *" />
                     <textarea id="description" name="description" rows="5" required
-                              class="mt-1 block w-full border-gray-300 focus:border-comsoc-500 focus:ring-comsoc-500 rounded-md shadow-sm text-sm resize-none"
-                              placeholder="Describe the event...">{{ old('description') }}</textarea>
+                              class="mt-1 block w-full border-gray-300 focus:border-comsoc-500 focus:ring-comsoc-500 rounded-xl shadow-sm text-sm resize-none"
+                              placeholder="Describe the event, objectives, and agenda...">{{ old('description') }}</textarea>
                     <x-input-error :messages="$errors->get('description')" class="mt-1" />
                 </div>
 
                 {{-- Date / Time --}}
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <x-input-label for="event_date" value="Event Date" />
+                        <x-input-label for="event_date" value="Event Date *" />
                         <x-text-input id="event_date" name="event_date" type="date"
                                       :value="old('event_date')" required class="mt-1 block w-full" />
                         <x-input-error :messages="$errors->get('event_date')" class="mt-1" />
                     </div>
                     <div>
-                        <x-input-label for="start_time" value="Start Time" />
+                        <x-input-label for="start_time" value="Start Time *" />
                         <x-text-input id="start_time" name="start_time" type="time"
                                       :value="old('start_time')" required class="mt-1 block w-full" />
                         <x-input-error :messages="$errors->get('start_time')" class="mt-1" />
@@ -57,10 +74,10 @@
 
                 {{-- Venue --}}
                 <div>
-                    <x-input-label for="venue" value="Venue" />
+                    <x-input-label for="venue" value="Venue *" />
                     <x-text-input id="venue" name="venue" type="text"
                                   :value="old('venue')" required
-                                  placeholder="e.g. CCIS Auditorium"
+                                  placeholder="e.g. UMak Grand Auditorium / CCIS Lab 1"
                                   class="mt-1 block w-full" />
                     <x-input-error :messages="$errors->get('venue')" class="mt-1" />
                 </div>
@@ -97,9 +114,16 @@
                 </div>
 
                 {{-- Requirements --}}
-                <div x-data="{ reqs: {{ json_encode(old('requirements', [''])) }} }">
-                    <x-input-label value="Requirements (optional)" />
-                    <p class="text-xs text-gray-400 mt-0.5 mb-2">List any requirements participants need to bring or fulfil.</p>
+                <div x-data="{ reqs: {{ json_encode(old('requirements', [])) }} }">
+                    <div class="flex items-center justify-between mb-1">
+                        <x-input-label value="Requirements (optional)" />
+                        <button type="button"
+                                @click="reqs.push('')"
+                                class="text-xs text-comsoc-600 hover:text-comsoc-800 font-bold transition-colors">
+                            + Add requirement
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-400 mb-2">List any materials or requirements participants need to bring (e.g. Student ID, Laptop, Ticket).</p>
                     <div class="space-y-2">
                         <template x-for="(req, idx) in reqs" :key="idx">
                             <div class="flex gap-2">

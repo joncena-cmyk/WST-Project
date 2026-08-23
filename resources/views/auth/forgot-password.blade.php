@@ -23,7 +23,7 @@
                           :value="old('email')"
                           required
                           autofocus
-                          placeholder="you@example.com" />
+                          placeholder="yourname@umak.edu.ph" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 

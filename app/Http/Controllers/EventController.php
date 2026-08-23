@@ -75,7 +75,7 @@ class EventController extends Controller
             'participant_limit'     => ['nullable', 'integer', 'min:1'],
             'image'                 => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'requirements'          => ['nullable', 'array'],
-            'requirements.*'        => ['string', 'max:255'],
+            'requirements.*'        => ['nullable', 'string', 'max:255'],
         ]);
 
         if ($request->hasFile('image')) {
@@ -122,7 +122,7 @@ class EventController extends Controller
             'participant_limit'     => ['nullable', 'integer', 'min:1'],
             'image'                 => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:4096'],
             'requirements'          => ['nullable', 'array'],
-            'requirements.*'        => ['string', 'max:255'],
+            'requirements.*'        => ['nullable', 'string', 'max:255'],
         ]);
 
         if ($request->hasFile('image')) {

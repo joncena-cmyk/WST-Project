@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Program;
 use App\Models\User;
+use App\Rules\UmakEmail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -37,8 +38,9 @@ class RegisteredUserController extends Controller
             'name'       => ['required', 'string', 'max:255'],
             'student_id' => ['nullable', 'string', 'max:20', 'unique:users,student_id'],
             'program_id' => ['nullable', 'exists:programs,id'],
-            'email'      => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'email'      => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class, new UmakEmail],
             'password'   => ['required', 'confirmed', Rules\Password::defaults()],
+            'terms'      => ['accepted'],
         ]);
 
         $user = User::create([

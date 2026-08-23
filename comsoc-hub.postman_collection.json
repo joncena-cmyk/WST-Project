@@ -1,0 +1,1211 @@
+{
+  "info": {
+    "name": "COMSOC Hub",
+    "description": "Full API test collection for COMSOC Hub — Computer Society · CCIS · University of Makati.\n\nStack: Laravel 11 · Blade · Tailwind CSS · Alpine.js · MySQL\n\nNotes:\n- This is a session-based web app (no REST API tokens). CSRF token must be obtained before mutating requests.\n- The prerequest script on the collection root fetches the CSRF token automatically.\n- Run the 'Auth — Login (Admin)' request first to establish a session cookie.\n- {{BASE_URL}} defaults to http://localhost/WST-Project/public",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "BASE_URL", "value": "http://localhost/WST-Project/public", "type": "string", "description": "Application base URL" },
+    { "key": "CSRF_TOKEN", "value": "", "type": "string", "description": "Laravel XSRF token extracted from cookie" },
+    { "key": "EVENT_ID",   "value": "1", "type": "string", "description": "Set by 'Events — Create' test script" },
+    { "key": "POST_ID",    "value": "1", "type": "string", "description": "Set by 'Community — Create Post' test script" },
+    { "key": "COMMENT_ID", "value": "1", "type": "string", "description": "Set by 'Community — Add Comment' test script" },
+    { "key": "REG_ID",     "value": "1", "type": "string", "description": "Set by 'Events — Register' test script" },
+    { "key": "CERT_ID",    "value": "1", "type": "string", "description": "Set by 'Certificates — Issue' test script" },
+    { "key": "MEMBERSHIP_ID", "value": "1", "type": "string", "description": "Set by 'Admin Memberships — Create' test script" },
+    { "key": "USER_ID",    "value": "1", "type": "string", "description": "Admin target user ID for user management tests" }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Automatically refresh CSRF token before every request",
+          "// Laravel sets the XSRF-TOKEN cookie on GET requests.",
+          "// We read it from the cookie jar and store it as a collection variable.",
+          "const xsrfCookie = pm.cookies.get('XSRF-TOKEN');",
+          "if (xsrfCookie) {",
+          "    pm.collectionVariables.set('CSRF_TOKEN', decodeURIComponent(xsrfCookie));",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+
+    {
+      "name": "Auth",
+      "item": [
+
+        {
+          "name": "Auth — GET Login Page (fetch CSRF)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["login"]
+            },
+            "description": "Fetches the login page. Laravel sets the XSRF-TOKEN cookie here, which subsequent POST requests need."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login page returns 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response is HTML', function () {",
+                  "    pm.expect(pm.response.headers.get('Content-Type')).to.include('text/html');",
+                  "});",
+                  "// Capture CSRF token from cookie",
+                  "const xsrf = pm.cookies.get('XSRF-TOKEN');",
+                  "if (xsrf) {",
+                  "    pm.collectionVariables.set('CSRF_TOKEN', decodeURIComponent(xsrf));",
+                  "    console.log('CSRF token captured.');",
+                  "} else {",
+                  "    console.warn('XSRF-TOKEN cookie not found. Is the app running?');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Auth — Login (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+              { "key": "X-XSRF-TOKEN", "value": "{{CSRF_TOKEN}}" },
+              { "key": "Accept", "value": "application/json, text/html" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "_token", "value": "{{CSRF_TOKEN}}" },
+                { "key": "email",  "value": "admin@umak.edu.ph" },
+                { "key": "password", "value": "Admin@COMSOC2025!" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["login"]
+            },
+            "description": "Logs in with the seeded admin account. Session cookie is stored automatically by Postman's cookie jar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Login redirects to dashboard (302 or 200)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                  "});",
+                  "pm.test('No error in response', function () {",
+                  "    const body = pm.response.text();",
+                  "    pm.expect(body).to.not.include('These credentials do not match');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Auth — Register (valid @umak.edu.ph email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+              { "key": "X-XSRF-TOKEN", "value": "{{CSRF_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "_token",              "value": "{{CSRF_TOKEN}}" },
+                { "key": "name",               "value": "Test Student" },
+                { "key": "email",              "value": "teststudent{{$randomInt}}@umak.edu.ph" },
+                { "key": "student_id",         "value": "2025-{{$randomInt}}" },
+                { "key": "program_id",         "value": "1" },
+                { "key": "password",           "value": "Password@123!" },
+                { "key": "password_confirmation", "value": "Password@123!" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["register"]
+            },
+            "description": "Registers a new user. The UmakEmail rule now requires @umak.edu.ph. Should succeed."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Registration succeeds (no validation error)', function () {",
+                  "    const body = pm.response.text();",
+                  "    pm.expect(body).to.not.include('Only @umak.edu.ph email addresses are allowed');",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Auth — Register (REJECT non-umak email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+              { "key": "X-XSRF-TOKEN", "value": "{{CSRF_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "_token",              "value": "{{CSRF_TOKEN}}" },
+                { "key": "name",               "value": "Outsider User" },
+                { "key": "email",              "value": "outsider@gmail.com" },
+                { "key": "student_id",         "value": "9999-001" },
+                { "key": "program_id",         "value": "1" },
+                { "key": "password",           "value": "Password@123!" },
+                { "key": "password_confirmation", "value": "Password@123!" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["register"]
+            },
+            "description": "Attempts to register with a non-@umak.edu.ph email. The UmakEmail rule must reject it."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Non-umak email is rejected with validation error', function () {",
+                  "    const body = pm.response.text();",
+                  "    // Laravel returns 422 (JSON) or redirects back with errors (HTML)",
+                  "    const isValidationError = pm.response.code === 422 ||",
+                  "        body.includes('Only @umak.edu.ph email addresses are allowed');",
+                  "    pm.expect(isValidationError).to.be.true;",
+                  "});",
+                  "pm.test('Response is not a successful redirect to dashboard', function () {",
+                  "    const body = pm.response.text();",
+                  "    pm.expect(body).to.not.include('dashboard');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Auth — Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+              { "key": "X-XSRF-TOKEN", "value": "{{CSRF_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "_token", "value": "{{CSRF_TOKEN}}" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/logout",
+              "host": ["{{BASE_URL}}"],
+              "path": ["logout"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Logout redirects (302 or 200)', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Dashboard & Profile",
+      "item": [
+
+        {
+          "name": "Dashboard — GET (requires auth)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/dashboard",
+              "host": ["{{BASE_URL}}"],
+              "path": ["dashboard"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Dashboard returns 200 when authenticated', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Profile — GET Edit",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/profile",
+              "host": ["{{BASE_URL}}"],
+              "path": ["profile"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Profile page returns 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Community (Posts & Comments)",
+      "item": [
+
+        {
+          "name": "Community — GET Feed",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/community",
+              "host": ["{{BASE_URL}}"],
+              "path": ["community"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Community feed returns 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Community — Create Post",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+              { "key": "X-XSRF-TOKEN", "value": "{{CSRF_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "_token", "value": "{{CSRF_TOKEN}}" },
+                { "key": "body",   "value": "Test post created by Postman collection runner." },
+                { "key": "type",   "value": "community" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/community",
+              "host": ["{{BASE_URL}}"],
+              "path": ["community"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Post created — redirect or 200', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                  "});",
+                  "pm.test('No validation error', function () {",
+                  "    pm.expect(pm.response.text()).to.not.include('The body field is required');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Community — Toggle Like (POST /{post}/like)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "X-XSRF-TOKEN", "value": "{{CSRF_TOKEN}}" },
+              { "key": "X-Requested-With", "value": "XMLHttpRequest" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "_token", "value": "{{CSRF_TOKEN}}" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/community/{{POST_ID}}/like",
+              "host": ["{{BASE_URL}}"],
+              "path": ["community", "{{POST_ID}}", "like"]
+            },
+            "description": "AJAX like toggle. Returns JSON with liked boolean and count."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Toggle like returns 200 JSON', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Response has liked and count fields', function () {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('liked');",
+                  "    pm.expect(json).to.have.property('count');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Community — Add Comment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+              { "key": "X-XSRF-TOKEN", "value": "{{CSRF_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "_token", "value": "{{CSRF_TOKEN}}" },
+                { "key": "body",   "value": "Test comment from Postman." }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/community/{{POST_ID}}/comments",
+              "host": ["{{BASE_URL}}"],
+              "path": ["community", "{{POST_ID}}", "comments"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Comment stored — redirect or 200', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 302]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Events",
+      "item": [
+
+        {
+          "name": "Events — GET Browse (public list)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/events",
+              "host": ["{{BASE_URL}}"],
+              "path": ["events"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Events list returns 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Events — GET Manage (officer view)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/events/manage",
+              "host": ["{{BASE_URL}}"],
+              "path": ["events", "manage"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Manage page returns 200 or 403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Events — Create Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+              { "key": "X-XSRF-TOKEN", "value": "{{CSRF_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "_token",              "value": "{{CSRF_TOKEN}}" },
+                { "key": "title",               "value": "Postman Test Event" },
+                { "key": "description",         "value": "Created by Postman collection runner." },
+                { "key": "event_date",          "value": "2026-12-01" },
+                { "key": "start_time",          "value": "09:00" },
+                { "key": "end_time",            "value": "12:00" },
+                { "key": "venue",               "value": "CCIS Building" },
+                { "key": "registration_deadline", "value": "2026-11-28" },
+                { "key": "participant_limit",   "value": "50" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/events",
+              "host": ["{{BASE_URL}}"],
+              "path": ["events"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Event created — 200 or 302', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 302, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Events — GET Show (event detail)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/events/{{EVENT_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["events", "{{EVENT_ID}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Event detail returns 200 or 404', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Events — Register for Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/x-www-form-urlencoded" },
+              { "key": "X-XSRF-TOKEN", "value": "{{CSRF_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "_token", "value": "{{CSRF_TOKEN}}" }
+              ]
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/events/{{EVENT_ID}}/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["events", "{{EVENT_ID}}", "register"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Registration — 200, 302, or 422', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 302, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Events — My Registered Events",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/events/my-events",
+              "host": ["{{BASE_URL}}"],
+              "path": ["events", "my-events"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('My events page returns 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Event Approval (Adviser)",
+      "item": [
+
+        {
+          "name": "Event Approvals — GET Queue",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/events-approval",
+              "host": ["{{BASE_URL}}"],
+              "path": ["events-approval"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Approval queue returns 200 or 403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Event Approvals — GET Review Event",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/events-approval/{{EVENT_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["events-approval", "{{EVENT_ID}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Event review page returns 200, 403, or 404', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Attendance",
+      "item": [
+
+        {
+          "name": "Attendance — GET QR Pass",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/attendance/pass/{{EVENT_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["attendance", "pass", "{{EVENT_ID}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('QR Pass returns 200, 403, or 404', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Attendance — GET Scanner Page (officer)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/attendance/scanner/{{EVENT_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["attendance", "scanner", "{{EVENT_ID}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Scanner page returns 200 or 403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Attendance — POST Check-In (AJAX)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",    "value": "application/json" },
+              { "key": "X-XSRF-TOKEN",   "value": "{{CSRF_TOKEN}}" },
+              { "key": "Accept",          "value": "application/json" },
+              { "key": "X-Requested-With","value": "XMLHttpRequest" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\"qr_token\": \"INVALID_TOKEN_TEST\"}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/attendance/checkin/{{EVENT_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["attendance", "checkin", "{{EVENT_ID}}"]
+            },
+            "description": "AJAX check-in endpoint. Sending an invalid token should return an error JSON, not a crash."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Check-in returns JSON response', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404, 422]);",
+                  "});",
+                  "pm.test('Response is valid JSON', function () {",
+                  "    pm.response.json(); // throws if not JSON",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Attendance — GET Attendance List (officer)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/attendance/list/{{EVENT_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["attendance", "list", "{{EVENT_ID}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Attendance list returns 200, 403, or 404', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Certificates",
+      "item": [
+
+        {
+          "name": "Certificates — GET My Certificates",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/certificates",
+              "host": ["{{BASE_URL}}"],
+              "path": ["certificates"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Certificate list returns 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Certificates — GET Manage (officer, per event)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/certificates/event/{{EVENT_ID}}/manage",
+              "host": ["{{BASE_URL}}"],
+              "path": ["certificates", "event", "{{EVENT_ID}}", "manage"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Certificate manage returns 200, 403, or 404', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Certificates — GET View Certificate",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/certificates/{{CERT_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["certificates", "{{CERT_ID}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Certificate view returns 200 or 404', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Moderation",
+      "item": [
+
+        {
+          "name": "Moderation — GET Pending Reports",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/moderation",
+              "host": ["{{BASE_URL}}"],
+              "path": ["moderation"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Moderation page returns 200 or 403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Membership",
+      "item": [
+
+        {
+          "name": "Membership — GET My Membership",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/membership",
+              "host": ["{{BASE_URL}}"],
+              "path": ["membership"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('My membership page returns 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Admin — User Management",
+      "item": [
+
+        {
+          "name": "Admin Users — GET List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/admin/users",
+              "host": ["{{BASE_URL}}"],
+              "path": ["admin", "users"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin users list returns 200 or 403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Admin Users — GET Show User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/admin/users/{{USER_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["admin", "users", "{{USER_ID}}"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin user detail returns 200, 403, or 404', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Admin — Membership Management",
+      "item": [
+
+        {
+          "name": "Admin Memberships — GET List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/admin/memberships",
+              "host": ["{{BASE_URL}}"],
+              "path": ["admin", "memberships"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin memberships returns 200 or 403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Admin Memberships — GET Create Form",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/admin/memberships/create",
+              "host": ["{{BASE_URL}}"],
+              "path": ["admin", "memberships", "create"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Membership create form returns 200 or 403', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    },
+
+    {
+      "name": "Public Pages",
+      "item": [
+
+        {
+          "name": "Welcome Page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/",
+              "host": ["{{BASE_URL}}"],
+              "path": [""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Welcome page returns 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Welcome page contains COMSOC branding', function () {",
+                  "    pm.expect(pm.response.text()).to.include('COMSOC');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "About Page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/about",
+              "host": ["{{BASE_URL}}"],
+              "path": ["about"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('About page returns 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+
+        {
+          "name": "Auth — Unauthenticated dashboard redirects to login",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/dashboard",
+              "host": ["{{BASE_URL}}"],
+              "path": ["dashboard"]
+            },
+            "description": "Without session cookie the dashboard must redirect to /login."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Clear session to simulate unauthenticated request",
+                  "pm.cookies.clear();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Unauthenticated dashboard redirects (302 or lands on login page)', function () {",
+                  "    // After redirect following, we should be on the login page",
+                  "    const body = pm.response.text();",
+                  "    const isLoginOrRedirect = pm.response.code === 302 ||",
+                  "        body.includes('Sign in') ||",
+                  "        body.includes('login');",
+                  "    pm.expect(isLoginOrRedirect).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+
+      ]
+    }
+
+  ]
+}

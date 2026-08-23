@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.2",
         "laravel/framework": "^11.0",
+        "laravel/socialite": "^5.30",
         "laravel/tinker": "^2.9"
     },
     "require-dev": {
@@ -60,6 +61,10 @@
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
+        "platform-check": false,
+        "platform": {
+            "php": "8.2.12"
+        },
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true

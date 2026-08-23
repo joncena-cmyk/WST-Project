@@ -207,10 +207,38 @@
                         </form>
                     @endcan
                     @can('viewParticipants', $event)
+                        <a href="{{ route('events.committees.index', $event) }}"
+                           class="inline-flex items-center gap-1.5 px-4 py-2 bg-comsoc-50 border border-comsoc-200 text-sm font-semibold text-comsoc-800 rounded-lg hover:bg-comsoc-100 transition-colors">
+                            <svg class="w-4 h-4 text-comsoc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            Committees &amp; Tasks
+                        </a>
                         <a href="{{ route('events.participants', $event) }}"
                            class="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                            View Participants ({{ $event->registeredCount() }})
+                            Participants ({{ $event->registeredCount() }})
                         </a>
+
+                        @if(in_array($event->status, [\App\Models\Event::STATUS_PUBLISHED, \App\Models\Event::STATUS_ONGOING, \App\Models\Event::STATUS_COMPLETED]))
+                            <a href="{{ route('attendance.scanner', $event) }}"
+                               class="inline-flex items-center gap-1.5 px-4 py-2 bg-yellow-500 text-white text-sm font-semibold rounded-lg hover:bg-yellow-600 transition-colors shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                                </svg>
+                                QR Scanner
+                            </a>
+                            <a href="{{ route('attendance.index', $event) }}"
+                               class="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                                Attendance List
+                            </a>
+                            <a href="{{ route('certificates.manage', $event) }}"
+                               class="inline-flex items-center gap-1.5 px-4 py-2 border border-comsoc-300 text-sm font-medium text-comsoc-700 rounded-lg hover:bg-comsoc-50 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                                </svg>
+                                Certificates
+                            </a>
+                        @endif
                     @endcan
                 </div>
             </div>

@@ -1,0 +1,41 @@
+{
+  "version": "0.1",
+  "project": {
+    "name": "COMSOC Hub",
+    "baseUrl": "http://localhost/WST-Project/public",
+    "description": "COMSOC Hub — Computer Society · CCIS · University of Makati. Laravel 11 web application.",
+    "updatedAt": "2026-08-01T00:00:00Z"
+  },
+  "default": {
+    "workspace": "comsoc-hub",
+    "collection": "comsoc-hub-api",
+    "environment": "local"
+  },
+  "workspaces": {},
+  "collections": {
+    "comsoc-hub-api": {
+      "id": null,
+      "uid": null,
+      "name": "COMSOC Hub",
+      "description": "Full collection for the COMSOC Hub Laravel application",
+      "requestCount": 50,
+      "createdAt": null,
+      "lastTestRun": null,
+      "testResults": null
+    }
+  },
+  "environments": {
+    "local": {
+      "id": null,
+      "uid": null,
+      "name": "COMSOC Hub — Local",
+      "variables": {
+        "BASE_URL": "http://localhost/WST-Project/public",
+        "ADMIN_EMAIL": "admin@umak.edu.ph",
+        "ADMIN_PASSWORD": "Admin@COMSOC2025!",
+        "ADVISER_EMAIL": "adviser@umak.edu.ph",
+        "ADVISER_PASSWORD": "Adviser@COMSOC2025!"
+      }
+    }
+  }
+}

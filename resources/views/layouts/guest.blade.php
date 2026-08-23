@@ -45,8 +45,9 @@
 
             {{-- Centre tagline --}}
             <div class="flex-1 flex flex-col justify-center">
+                @php $ayStart = (int)date('n') >= 6 ? (int)date('Y') : (int)date('Y') - 1; @endphp
                 <p class="text-xs font-bold text-gold-400 uppercase tracking-widest mb-3">
-                    Academic Year 2025–2026
+                    Academic Year {{ $ayStart }}–{{ $ayStart + 1 }}
                 </p>
                 <h1 class="text-3xl xl:text-4xl font-black text-white leading-tight mb-4">
                     Your organization,<br>
@@ -86,7 +87,7 @@
             <p class="text-comsoc-500 text-xs mt-0.5">CCIS · University of Makati</p>
         </div>
 
-        <div class="w-full max-w-sm">
+        <div class="{{ ($wide ?? false) ? 'w-full max-w-md' : 'w-full max-w-sm' }}">
             {{ $slot }}
         </div>
 
@@ -100,5 +101,6 @@
     </div>
 
 </div>
+@stack('scripts')
 </body>
 </html>

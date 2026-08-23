@@ -19,7 +19,11 @@ class AuthenticationTest extends TestCase
 
     public function test_users_can_authenticate_using_the_login_screen(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'email' => 'student.auth@umak.edu.ph',
+            'password' => 'password',
+            'account_status' => User::STATUS_ACTIVE,
+        ]);
 
         $response = $this->post('/login', [
             'email' => $user->email,
@@ -30,9 +34,12 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
-    public function test_users_can_not_authenticate_with_invalid_password(): void
+    public function test_users_cannot_authenticate_with_invalid_password(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'email' => 'student.wrong@umak.edu.ph',
+            'password' => 'password',
+        ]);
 
         $this->post('/login', [
             'email' => $user->email,
@@ -42,9 +49,56 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_suspended_users_cannot_authenticate(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'suspended.user@umak.edu.ph',
+            'password' => 'password',
+            'account_status' => User::STATUS_SUSPENDED,
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHas('account_error');
+    }
+
+    public function test_inactive_users_cannot_authenticate(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'inactive.user@umak.edu.ph',
+            'password' => 'password',
+            'account_status' => User::STATUS_INACTIVE,
+        ]);
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHas('account_error');
+    }
+
+    public function test_non_umak_email_rejected_at_login(): void
+    {
+        $response = $this->post('/login', [
+            'email' => 'external@gmail.com',
+            'password' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
+    }
+
     public function test_users_can_logout(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'email' => 'logout.test@umak.edu.ph',
+        ]);
 
         $response = $this->actingAs($user)->post('/logout');
 

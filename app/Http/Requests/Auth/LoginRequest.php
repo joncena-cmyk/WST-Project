@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Rules\UmakEmail;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,7 +29,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'string', 'email'],
+            'email' => ['required', 'string', 'email', new UmakEmail],
             'password' => ['required', 'string'],
         ];
     }
@@ -47,6 +48,25 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        // Check account status after successful credential match
+        $user = Auth::user();
+        if ($user->account_status === \App\Models\User::STATUS_SUSPENDED) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+            session()->flash('account_error', 'Your account has been suspended. Please contact the COMSOC administrator for assistance.');
+            throw ValidationException::withMessages([
+                'email' => ' ', // keeps the field highlighted without duplicating the message
+            ]);
+        }
+
+        if ($user->account_status === \App\Models\User::STATUS_INACTIVE) {
+            Auth::logout();
+            session()->flash('account_error', 'Your account is inactive. Please contact the COMSOC administrator to reactivate your access.');
+            throw ValidationException::withMessages([
+                'email' => ' ',
             ]);
         }
 
