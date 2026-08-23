@@ -68,19 +68,18 @@
                     @include('community.partials.create-post-form')
                 @endcan
 
-                {{-- Stories / Category pills row (mobile-friendly scrollable) --}}
+                {{-- Category filter pills --}}
                 <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-1 px-1">
                     @foreach([
-                        ['label' => 'All Posts', 'active' => true, 'icon' => '🏠'],
-                        ['label' => 'Announcements', 'active' => false, 'icon' => '📢'],
-                        ['label' => 'Events', 'active' => false, 'icon' => '🎉'],
-                        ['label' => 'Achievements', 'active' => false, 'icon' => '🏆'],
+                        ['label' => 'All Posts', 'active' => true],
+                        ['label' => 'Official Announcements', 'active' => false],
+                        ['label' => 'Events & Highlights', 'active' => false],
+                        ['label' => 'Student Achievements', 'active' => false],
                     ] as $cat)
-                        <button class="flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all
+                        <button class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 transition-all
                             {{ $cat['active']
-                                ? 'bg-comsoc-700 text-white shadow-sm'
+                                ? 'bg-comsoc-700 text-white shadow-xs'
                                 : 'bg-white border border-gray-200 text-gray-600 hover:border-comsoc-300 hover:text-comsoc-700' }}">
-                            <span>{{ $cat['icon'] }}</span>
                             {{ $cat['label'] }}
                         </button>
                     @endforeach

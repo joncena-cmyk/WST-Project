@@ -44,6 +44,11 @@ class Post extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->author();
+    }
+
     public function images(): HasMany
     {
         return $this->hasMany(PostImage::class)->orderBy('order');

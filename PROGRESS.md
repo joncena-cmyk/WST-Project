@@ -462,29 +462,30 @@ Replaces physical/email document routing for reservation letters, proposals, bud
 
 ---
 
-### Phase 8 — Dashboards, Reports & Analytics
-Replaces the current static `dashboard.blade.php` with real role-specific views.
+### Phase 8 — Dashboards, Reports & Analytics (Completed)
+Replaces the static dashboard with specialized role-specific dashboards, an organization-wide analytics hub, and exportable CSV reports.
 
-**Role dashboards planned:**
+#### Completed Features:
+- **Role-Specific Dashboards**:
+  - **Student / Member Dashboard (`dashboards/student.blade.php`)**: Active digital QR passes for registered events, active membership card, personal attendance check-in count, earned certificates, and upcoming events carousel.
+  - **Officer / President Dashboard (`dashboards/officer.blade.php`)**: Live operational KPIs, active events list, committee task velocity progress bar, pending document approvals pipeline, and community activity summary.
+  - **Adviser Dashboard (`dashboards/adviser.blade.php`)**: Pending event approvals queue, pending document review queue, approved organization academic calendar schedule, and quick decision actions.
+  - **Super Administrator Dashboard (`dashboards/admin.blade.php`)**: Platform user growth metrics, active vs suspended accounts, academic program distribution charts, and recent registration logs.
+- **Organization Reports & Analytics Hub (`/analytics`)**:
+  - Event participation and turnout rate analysis (`%`).
+  - CCIS Academic Program membership distribution with visual progress bars.
+  - Committee task distribution (completed vs in-progress vs pending).
+  - Community engagement metrics (posts, comments, reactions).
+- **Exportable CSV Reports**:
+  - Event Attendance Roster CSV export (Attendee name, student ID, program, email, timestamp, status).
+  - Membership Master Roster CSV export.
+  - All Events Performance Summary CSV export.
+- **Sidebar Integration**: Unlocked **Reports & Analytics** menu in the sidebar for Officers, Advisers, and Admins.
+- **Automated Tests**: 9 feature tests in `DashboardRoleTest.php` and `AnalyticsReportTest.php`.
 
-| Role | Key Content |
-|------|-------------|
-| Student | Upcoming events, registered events, membership status, attendance history, certificates |
-| Member | Student view + active membership card |
-| Program Rep | Program activity summary, communication tools |
-| Officer | Event management summary, registrations, attendance, tasks, documents |
-| VP External Affairs | Partnership pipeline, collaboration activities, partner contacts |
-| President | Organization overview, officer activity, event/membership/report summary |
-| Adviser | Pending event approvals, pending document reviews, approval history |
-| Admin | User stats, role distribution, audit log viewer, system health |
+---
 
-**Planned reports:**
-- Event participation (registrations vs attendance per event)
-- Membership report (active/expired/pending by program and year)
-- Attendance summary per event
-- Certificate issuance report
-- Task completion rate per event
-- Community engagement metrics (posts, reactions, comments)
+## What's Next — Planned Phases
 
 ---
 

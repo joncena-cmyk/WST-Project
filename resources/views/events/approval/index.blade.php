@@ -38,10 +38,20 @@
                         <span class="text-xs text-gray-400">Submitted {{ $event->updated_at->diffForHumans() }}</span>
                     </div>
                     <div class="px-5 py-4 flex flex-wrap items-center justify-between gap-4">
-                        <div class="text-sm text-gray-600 space-y-0.5">
-                            <p>📅 {{ $event->event_date->format('M d, Y') }} · {{ \Carbon\Carbon::parse($event->start_time)->format('g:i A') }}</p>
-                            <p>📍 {{ $event->venue }}</p>
-                            <p class="text-xs text-gray-400">Created by {{ $event->creator->name }}</p>
+                        <div class="text-xs text-gray-600 space-y-1">
+                            <p class="flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                {{ $event->event_date->format('M d, Y') }} · {{ \Carbon\Carbon::parse($event->start_time)->format('g:i A') }}
+                            </p>
+                            <p class="flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                {{ $event->venue }}
+                            </p>
+                            <p class="text-xs text-gray-400 mt-1">Created by {{ $event->creator->name }}</p>
                         </div>
                         <a href="{{ route('events.approval.show', $event) }}"
                            class="inline-flex items-center gap-2 px-5 py-2.5 bg-comsoc-600 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-700 transition-colors shadow-sm">

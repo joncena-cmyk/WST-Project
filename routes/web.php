@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\Admin\MembershipController as AdminMembershipController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\AnalyticsReportController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommitteeController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\DocumentReviewController;
 use App\Http\Controllers\EventApprovalController;
@@ -27,9 +29,9 @@ Route::get('/about', function () {
     return view('about');
 })->name('about');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -164,7 +166,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // -----------------------------------------------------------------------
-    // Reports
+    // Analytics & Reports (Phase 8)
+    // -----------------------------------------------------------------------
+    Route::prefix('analytics')->name('analytics.')->group(function () {
+        Route::get('/',                                 [AnalyticsReportController::class, 'index'])->name('index');
+        Route::get('/export/attendance/{event}',        [AnalyticsReportController::class, 'exportAttendance'])->name('export.attendance');
+        Route::get('/export/memberships',               [AnalyticsReportController::class, 'exportMemberships'])->name('export.memberships');
+        Route::get('/export/events',                    [AnalyticsReportController::class, 'exportEvents'])->name('export.events');
+    });
+
+    // -----------------------------------------------------------------------
+    // Reports (User content reports)
     // -----------------------------------------------------------------------
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
 

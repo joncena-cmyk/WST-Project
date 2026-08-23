@@ -139,7 +139,9 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-gray-400 hover:text-red-600 p-1 transition" title="Remove member">
-                                            ✕
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
                                         </button>
                                     </form>
                                 @endcan
@@ -188,8 +190,10 @@
                                               onsubmit="return confirm('Delete this task?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-gray-300 hover:text-red-500 text-xs font-bold">
-                                                ✕
+                                            <button type="submit" class="text-gray-300 hover:text-red-500 p-1">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
                                             </button>
                                         </form>
                                     @endcan
@@ -215,8 +219,11 @@
                                         @endif
 
                                         @if($task->due_date)
-                                            <span class="{{ $task->isOverdue() ? 'text-red-600 font-bold' : '' }}">
-                                                📅 {{ $task->due_date->format('M d, Y') }}
+                                            <span class="flex items-center gap-1 {{ $task->isOverdue() ? 'text-red-600 font-bold' : '' }}">
+                                                <svg class="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                </svg>
+                                                {{ $task->due_date->format('M d, Y') }}
                                             </span>
                                         @endif
                                     </div>
@@ -235,8 +242,11 @@
                                             <form method="POST" action="{{ route('tasks.status', $task) }}">
                                                 @csrf
                                                 <input type="hidden" name="status" value="completed">
-                                                <button type="submit" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition">
-                                                    ✓ Done
+                                                <button type="submit" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition inline-flex items-center gap-1">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                    </svg>
+                                                    Done
                                                 </button>
                                             </form>
                                         @elseif($task->status === 'completed')
@@ -270,7 +280,11 @@
                  class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-base font-bold text-gray-900">Add Committee Member</h3>
-                    <button @click="addMemberModalOpen = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+                    <button @click="addMemberModalOpen = false" class="text-gray-400 hover:text-gray-600 rounded-lg p-1 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <form method="POST" action="{{ route('committees.members.store', $committee) }}" class="space-y-4">
@@ -315,7 +329,11 @@
                  class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-base font-bold text-gray-900">Create Task for {{ $committee->name }}</h3>
-                    <button @click="createTaskModalOpen = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+                    <button @click="createTaskModalOpen = false" class="text-gray-400 hover:text-gray-600 rounded-lg p-1 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <form method="POST" action="{{ route('events.tasks.store', $committee->event) }}" class="space-y-4">
@@ -383,7 +401,11 @@
                  class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-base font-bold text-gray-900">Edit Committee</h3>
-                    <button @click="editModalOpen = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+                    <button @click="editModalOpen = false" class="text-gray-400 hover:text-gray-600 rounded-lg p-1 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <form method="POST" action="{{ route('committees.update', $committee) }}" class="space-y-4">

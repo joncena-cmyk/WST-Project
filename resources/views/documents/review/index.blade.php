@@ -94,7 +94,12 @@
                                     </td>
                                     <td class="px-5 py-4 whitespace-nowrap text-xs">
                                         @if($doc->event)
-                                            <span class="font-semibold text-comsoc-600">📅 {{ Str::limit($doc->event->title, 20) }}</span>
+                                            <span class="font-semibold text-comsoc-600 flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5 text-comsoc-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                </svg>
+                                                {{ Str::limit($doc->event->title, 20) }}
+                                            </span>
                                         @else
                                             <span class="text-gray-400">— Organization</span>
                                         @endif

@@ -156,13 +156,13 @@
         </div>
         <div class="flex-1 overflow-hidden relative">
             <p class="ticker-inner text-xs text-white/90 py-2">
-                &nbsp;&nbsp;&nbsp;&nbsp;📢 Welcome to COMSOC Hub — your centralized platform for the Computer Society of CCIS, University of Makati.
+                &nbsp;&nbsp;&nbsp;&nbsp;Welcome to COMSOC Hub — the centralized platform for the Computer Society of CCIS, University of Makati.
                 &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
-                🎓 COMSOC membership registration for AY 2025–2026 is now open. Contact a COMSOC officer to enroll.
+                COMSOC membership registration for AY 2025–2026 is currently open.
                 &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
-                📅 Upcoming events will be posted once approved by the organization adviser.
+                Upcoming CCIS events and activities will be posted once officially approved.
                 &nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;
-                💻 COMSOC Hub is being built module by module — more features coming soon!
+                Explore technical committees, event passes, community forums, and verified credentials.
             </p>
         </div>
     </div>
@@ -566,10 +566,19 @@
                         {{-- Content --}}
                         <div class="flex-1 p-4">
                             <p class="font-bold text-gray-900 text-sm leading-snug mb-1 line-clamp-2">{{ $event->title }}</p>
-                            <p class="text-xs text-gray-500 mb-2">
-                                📍 {{ $event->venue }}
-                                &nbsp;·&nbsp;
-                                🕐 {{ \Carbon\Carbon::parse($event->start_time)->format('g:i A') }}
+                            <p class="text-xs text-gray-500 mb-2 flex items-center gap-3">
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    {{ $event->venue }}
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    {{ \Carbon\Carbon::parse($event->start_time)->format('g:i A') }}
+                                </span>
                             </p>
                             @auth
                                 <a href="{{ route('events.show', $event) }}"

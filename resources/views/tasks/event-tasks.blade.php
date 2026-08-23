@@ -180,8 +180,11 @@
                                 <form method="POST" action="{{ route('tasks.status', $task) }}">
                                     @csrf
                                     <input type="hidden" name="status" value="completed">
-                                    <button type="submit" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition">
-                                        ✓ Complete
+                                    <button type="submit" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition inline-flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        Complete
                                     </button>
                                 </form>
                             @elseif($task->status === 'completed')
@@ -229,8 +232,11 @@
                             @endif
 
                             @if($task->due_date)
-                                <span class="{{ $task->isOverdue() ? 'text-red-600 font-bold' : '' }}">
-                                    📅 Due {{ $task->due_date->format('M d, Y') }}
+                                <span class="flex items-center gap-1 {{ $task->isOverdue() ? 'text-red-600 font-bold' : '' }}">
+                                    <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    Due {{ $task->due_date->format('M d, Y') }}
                                     @if($task->isOverdue())
                                         <span class="ml-1 text-[10px] bg-red-100 text-red-700 px-1.5 py-0.2 rounded font-bold">Overdue</span>
                                     @endif
@@ -239,8 +245,11 @@
                         </div>
 
                         @if($task->notes)
-                            <span class="text-gray-400 truncate max-w-xs" title="{{ $task->notes }}">
-                                💬 {{ $task->notes }}
+                            <span class="text-gray-400 truncate max-w-xs flex items-center gap-1" title="{{ $task->notes }}">
+                                <svg class="w-3.5 h-3.5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/>
+                                </svg>
+                                {{ $task->notes }}
                             </span>
                         @endif
                     </div>
@@ -267,7 +276,11 @@
                  class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-gray-100">
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="text-base font-bold text-gray-900">Create Task for {{ $event->title }}</h3>
-                    <button @click="createTaskModalOpen = false" class="text-gray-400 hover:text-gray-600 text-lg font-bold">✕</button>
+                    <button @click="createTaskModalOpen = false" class="text-gray-400 hover:text-gray-600 rounded-lg p-1 transition">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
                 </div>
 
                 <form method="POST" action="{{ route('events.tasks.store', $event) }}" class="space-y-4">
