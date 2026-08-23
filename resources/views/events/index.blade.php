@@ -24,6 +24,23 @@
                    class="text-sm font-medium text-comsoc-600 hover:text-comsoc-800 transition-colors">
                     My Registrations →
                 </a>
+                @if(Auth::user()->isAdviser() || Auth::user()->isAdmin())
+                    @php
+                        $pendingCount = \App\Models\Event::whereIn('status', [\App\Models\Event::STATUS_SUBMITTED, \App\Models\Event::STATUS_UNDER_REVIEW])->count();
+                    @endphp
+                    <a href="{{ route('events.approval.index') }}"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                        </svg>
+                        Event Approvals
+                        @if($pendingCount > 0)
+                            <span class="px-1.5 py-0.5 text-xs bg-white text-amber-800 font-black rounded-full">
+                                {{ $pendingCount }}
+                            </span>
+                        @endif
+                    </a>
+                @endif
                 @can('create', App\Models\Event::class)
                     <a href="{{ route('events.manage') }}"
                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-comsoc-600 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-700 transition-colors shadow-sm">

@@ -123,27 +123,36 @@
         {{-- Registration action --}}
         @if($event->isPublic())
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
-                @if($userRegistration && $userRegistration->status === 'registered')
+                @if($userRegistration)
                     <div class="flex items-center justify-between flex-wrap gap-4">
                         <div class="flex items-center gap-3">
-                            <div class="flex items-center justify-center w-10 h-10 rounded-xl bg-comsoc-50">
+                            <div class="w-10 h-10 rounded-full bg-comsoc-100 flex items-center justify-center shrink-0">
                                 <svg class="w-5 h-5 text-comsoc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                 </svg>
                             </div>
                             <div>
-                                <p class="font-semibold text-gray-900 text-sm">You're registered!</p>
+                                <p class="font-bold text-gray-900 text-sm">You are registered for this event!</p>
                                 <p class="text-xs text-gray-500">Registered {{ $userRegistration->created_at->diffForHumans() }}</p>
                             </div>
                         </div>
-                        <form method="POST" action="{{ route('events.registration.cancel', $userRegistration) }}">
-                            @csrf
-                            <button type="submit"
-                                    onclick="return confirm('Cancel your registration?')"
-                                    class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors">
-                                Cancel Registration
-                            </button>
-                        </form>
+                        <div class="flex items-center gap-3">
+                            <a href="{{ route('attendance.pass', $event) }}"
+                               class="inline-flex items-center gap-2 px-5 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-950 text-sm font-black rounded-xl transition shadow-xs">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+                                </svg>
+                                View My QR Pass
+                            </a>
+                            <form method="POST" action="{{ route('events.registration.cancel', $userRegistration) }}">
+                                @csrf
+                                <button type="submit"
+                                        onclick="return confirm('Cancel your registration?')"
+                                        class="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
+                                    Cancel
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 @elseif($event->isRegistrationOpen())
                     <div class="flex items-center justify-between flex-wrap gap-4">
@@ -177,22 +186,24 @@
         @endif
 
         {{-- Officer actions --}}
-        @can('update', $event)
+        @if(Auth::user()->isOfficerOrAbove() || Auth::id() === $event->created_by)
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
                 <p class="text-sm font-bold text-gray-800 mb-3">Officer Actions</p>
                 <div class="flex flex-wrap gap-2">
-                    <a href="{{ route('events.edit', $event) }}"
-                       class="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
-                        Edit
-                    </a>
+                    @can('update', $event)
+                        <a href="{{ route('events.edit', $event) }}"
+                           class="inline-flex items-center gap-1.5 px-4 py-2 border border-gray-300 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            Edit
+                        </a>
+                    @endcan
                     @can('submit', $event)
                         <form method="POST" action="{{ route('events.submit', $event) }}">
                             @csrf
                             <button type="submit"
-                                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">
+                                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
                                 Submit for Review
                             </button>
                         </form>
@@ -201,7 +212,10 @@
                         <form method="POST" action="{{ route('events.publish', $event) }}">
                             @csrf
                             <button type="submit"
-                                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-comsoc-600 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-700 transition-colors">
+                                    class="inline-flex items-center gap-1.5 px-4 py-2 bg-comsoc-600 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-700 transition-colors shadow-sm">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
                                 Publish Event
                             </button>
                         </form>
@@ -242,7 +256,7 @@
                     @endcan
                 </div>
             </div>
-        @endcan
+        @endif
 
         {{-- Approval history --}}
         @if($event->approvals->isNotEmpty())
