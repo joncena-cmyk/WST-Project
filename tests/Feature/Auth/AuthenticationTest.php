@@ -49,6 +49,55 @@ class AuthenticationTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_login_is_locked_after_three_invalid_password_attempts(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'student.lockout@umak.edu.ph',
+            'password' => 'password',
+        ]);
+
+        foreach (range(1, 3) as $attempt) {
+            $this->post('/login', [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertGuest();
+        $response->assertSessionHas('login_locked_seconds');
+    }
+
+    public function test_login_lock_expires_after_one_minute(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'student.lockout-expiry@umak.edu.ph',
+            'password' => 'password',
+        ]);
+
+        foreach (range(1, 3) as $attempt) {
+            $this->post('/login', [
+                'email' => $user->email,
+                'password' => 'wrong-password',
+            ]);
+        }
+
+        $this->travel(61)->seconds();
+
+        $response = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $response->assertRedirect(route('dashboard', absolute: false));
+    }
+
     public function test_suspended_users_cannot_authenticate(): void
     {
         $user = User::factory()->create([

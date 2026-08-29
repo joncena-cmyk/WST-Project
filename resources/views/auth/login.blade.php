@@ -42,9 +42,12 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('login') }}"
-          class="space-y-5"
-          x-data="{ loading: false }"
+        @php($loginLockedSeconds = (int) session('login_locked_seconds', 0))
+
+        <form method="POST" action="{{ route('login') }}"
+                    class="space-y-5"
+            x-data="{ loading: false, lockedSeconds: {{ $loginLockedSeconds }} }"
+                    x-init="setInterval(() => { if (lockedSeconds > 0) lockedSeconds--; }, 1000)"
           @submit="loading = true">
         @csrf
 
@@ -81,6 +84,7 @@
                               x-bind:type="show ? 'text' : 'password'"
                               name="password"
                               required
+                              x-bind:disabled="lockedSeconds > 0"
                               autocomplete="current-password"
                               placeholder="••••••••" />
                 <button type="button"
@@ -101,6 +105,14 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
+        @if ($loginLockedSeconds > 0)
+            <p class="text-sm text-red-600" role="alert">
+                Too many incorrect attempts. Try again in
+                <span x-text="Math.ceil(lockedSeconds / 60)">{{ ceil($loginLockedSeconds / 60) }}</span>
+                minute(s).
+            </p>
+        @endif
+
         <!-- Remember Me -->
         <div class="flex items-center">
             <input id="remember_me"
@@ -115,7 +127,7 @@
         <!-- Submit with loading state -->
         <div>
             <button type="submit"
-                    :disabled="loading"
+                    :disabled="loading || lockedSeconds > 0"
                     class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 bg-comsoc-600 border border-transparent rounded-md font-semibold text-sm text-white uppercase tracking-widest hover:bg-comsoc-700 focus:bg-comsoc-700 active:bg-comsoc-800 focus:outline-none focus:ring-2 focus:ring-comsoc-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-60 disabled:cursor-not-allowed">
                 {{-- Spinner (shown while loading) --}}
                 <svg x-show="loading"
