@@ -206,8 +206,14 @@
 
     </div>
 
-    {{-- jsQR library --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+    {{-- QR Code Detection libraries - Multiple CDN sources for reliability --}}
+    <script>
+        // Inline loader to ensure jsQR is available
+        window.jsQRReady = false;
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" onload="window.jsQRReady=true;" onerror="console.warn('jsQR from jsdelivr failed, trying fallback')"></script>
+    <!-- Fallback CDN -->
+    <script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js" onload="window.jsQRReady=true;" onerror="console.warn('All jsQR CDNs failed')"></script>
 
     <style>
         @keyframes scanLine {
@@ -218,6 +224,13 @@
     </style>
 
     <script>
+        // Ensure jsQR is available
+        if (typeof jsQR === 'undefined') {
+            console.warn('jsQR library not loaded initially');
+        } else {
+            console.log('✓ jsQR library loaded');
+        }
+
         const VIDEO       = document.getElementById('video');
         const CANVAS      = document.getElementById('canvas');
         const RESULT      = document.getElementById('result-overlay');
@@ -234,6 +247,7 @@
         let stream = null;
         let scanning = false;
         let debounce = false;
+        let frameCount = 0;
 
         // Audio Beep generator
         function playBeep(success = true) {
@@ -282,6 +296,7 @@
                 try {
                     stream = await navigator.mediaDevices.getUserMedia(constraints);
                 } catch (e) {
+                    console.warn('Exact constraints failed, trying fallback:', e.message);
                     stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 }
 
@@ -296,12 +311,23 @@
                 await getAvailableCameras();
 
                 scanning = true;
+                console.log('Camera started successfully, beginning QR scan loop...');
                 requestAnimationFrame(tick);
             } catch (err) {
                 console.error('Camera error:', err);
                 INDICATOR.className = 'w-2.5 h-2.5 rounded-full bg-red-400';
                 SCAN_STATUS.textContent = 'Camera error';
-                document.getElementById('camera-error-msg').textContent = 'Camera blocked or unavailable: ' + (err.message || 'Please check browser camera permissions.');
+                
+                let errorMessage = 'Camera blocked or unavailable.';
+                if (err.name === 'NotAllowedError') {
+                    errorMessage = 'Camera access denied. Please allow camera permissions in your browser settings.';
+                } else if (err.name === 'NotFoundError') {
+                    errorMessage = 'No camera device found. Please check your device.';
+                } else if (err.name === 'NotReadableError') {
+                    errorMessage = 'Camera is already in use by another application.';
+                }
+                
+                document.getElementById('camera-error-msg').textContent = errorMessage + ' (Error: ' + err.message + ')';
             }
         }
 
@@ -328,59 +354,72 @@
         async function tick() {
             if (!scanning) return;
 
-            if (VIDEO.readyState === VIDEO.HAVE_ENOUGH_DATA) {
-                const ctx = CANVAS.getContext('2d');
+            try {
+                if (VIDEO.readyState !== VIDEO.HAVE_ENOUGH_DATA) {
+                    if (scanning) requestAnimationFrame(tick);
+                    return;
+                }
+
+                frameCount++;
+                
+                // Prepare canvas
+                const ctx = CANVAS.getContext('2d', { willReadFrequently: true });
                 CANVAS.width  = VIDEO.videoWidth;
                 CANVAS.height = VIDEO.videoHeight;
+                
+                // Draw video frame to canvas
                 ctx.drawImage(VIDEO, 0, 0, CANVAS.width, CANVAS.height);
 
-                let qrValue = null;
+                // Try to detect QR code every 3rd frame for performance
+                if (frameCount % 3 === 0) {
+                    let qrValue = null;
 
-                // 1. Pass 1: Try Native BarcodeDetector on original frame
-                if ('BarcodeDetector' in window) {
-                    try {
-                        const detector = new BarcodeDetector({ formats: ['qr_code'] });
-                        const barcodes = await detector.detect(CANVAS);
-                        if (barcodes.length > 0) {
-                            qrValue = barcodes[0].rawValue;
+                    // Primary: jsQR detection
+                    if (typeof jsQR !== 'undefined' && window.jsQRReady) {
+                        try {
+                            const imageData = ctx.getImageData(0, 0, CANVAS.width, CANVAS.height);
+                            if (!imageData || !imageData.data) {
+                                console.error('Failed to get image data from canvas');
+                            } else {
+                                const code = jsQR(imageData.data, CANVAS.width, CANVAS.height, {
+                                    inversionAttempts: 'attemptBoth'
+                                });
+                                if (code && code.data) {
+                                    qrValue = code.data;
+                                    console.log('✓ QR detected via jsQR:', qrValue);
+                                }
+                            }
+                        } catch(e) {
+                            console.error('jsQR error:', e.message);
                         }
-                    } catch(e) {}
-                }
+                    } else {
+                        console.warn('jsQR library not available (jsQRReady=' + window.jsQRReady + ')');
+                    }
 
-                // 2. Pass 2: Try jsQR on original frame
-                if (!qrValue && typeof jsQR !== 'undefined') {
-                    const imageData = ctx.getImageData(0, 0, CANVAS.width, CANVAS.height);
-                    const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                        inversionAttempts: 'attemptBoth'
-                    });
-                    if (code) {
-                        qrValue = code.data;
+                    // Fallback: BarcodeDetector
+                    if (!qrValue && 'BarcodeDetector' in window) {
+                        try {
+                            const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                            const barcodes = await detector.detect(CANVAS);
+                            if (barcodes && barcodes.length > 0) {
+                                qrValue = barcodes[0].rawValue;
+                                console.log('✓ QR detected via BarcodeDetector:', qrValue);
+                            }
+                        } catch(e) {
+                            console.error('BarcodeDetector error:', e.message);
+                        }
+                    }
+
+                    // Process if detected
+                    if (qrValue && !debounce) {
+                        debounce = true;
+                        console.log('Processing QR:', qrValue);
+                        SCAN_STATUS.textContent = 'Processing...';
+                        processQr(qrValue);
                     }
                 }
-
-                // 3. Pass 3: Test horizontally mirrored frame (handles inverted/mirrored front webcams)
-                if (!qrValue && typeof jsQR !== 'undefined') {
-                    const fCanvas = document.createElement('canvas');
-                    fCanvas.width = CANVAS.width;
-                    fCanvas.height = CANVAS.height;
-                    const fctx = fCanvas.getContext('2d');
-                    fctx.translate(CANVAS.width, 0);
-                    fctx.scale(-1, 1);
-                    fctx.drawImage(CANVAS, 0, 0);
-
-                    const fData = fctx.getImageData(0, 0, CANVAS.width, CANVAS.height);
-                    const fCode = jsQR(fData.data, fData.width, fData.height, {
-                        inversionAttempts: 'attemptBoth'
-                    });
-                    if (fCode) {
-                        qrValue = fCode.data;
-                    }
-                }
-
-                if (qrValue && !debounce) {
-                    debounce = true;
-                    processQr(qrValue);
-                }
+            } catch(e) {
+                console.error('Tick loop error:', e);
             }
 
             if (scanning) {
@@ -389,6 +428,7 @@
         }
 
         function processQr(qrCode) {
+            console.log('processQr called with:', qrCode);
             SCAN_STATUS.textContent = 'Validating...';
 
             fetch(CHECK_IN_URL, {
@@ -400,9 +440,20 @@
                 },
                 body: JSON.stringify({ qr_code: qrCode }),
             })
-            .then(r => r.json().then(data => ({ status: r.status, body: data })))
+            .then(r => {
+                console.log('Response status:', r.status);
+                if (!r.ok && r.status !== 409 && r.status !== 422) {
+                    throw new Error(`HTTP ${r.status}`);
+                }
+                return r.json().then(data => {
+                    console.log('Response body:', data);
+                    return { status: r.status, body: data };
+                });
+            })
             .then(({ status, body }) => {
                 const isSuccess = status >= 200 && status < 300 && body.success;
+                console.log('Check-in result - Success:', isSuccess, 'Status:', status);
+                
                 playBeep(isSuccess);
                 showResult(body, isSuccess);
 
@@ -418,11 +469,17 @@
                 }, 3000);
             })
             .catch(err => {
+                console.error('Check-in fetch error:', err);
                 playBeep(false);
-                showResult({ success: false, message: 'Network error or server unreachable.', type: 'error' }, false);
+                showResult({ 
+                    success: false, 
+                    message: 'Error: ' + err.message,
+                    type: 'error' 
+                }, false);
                 setTimeout(() => {
                     RESULT.classList.add('hidden');
                     debounce = false;
+                    SCAN_STATUS.textContent = 'Scanning live...';
                 }, 3000);
             });
         }
@@ -479,7 +536,7 @@
             statusEl.textContent = 'Scanning uploaded image...';
 
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 const img = new Image();
                 img.onload = async function() {
                     const canvas = document.createElement('canvas');
@@ -490,20 +547,28 @@
 
                     let qrFound = null;
 
-                    // 1. Try BarcodeDetector
-                    if ('BarcodeDetector' in window) {
+                    // Primary: jsQR
+                    if (typeof jsQR !== 'undefined') {
+                        try {
+                            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                            const code = jsQR(imgData.data, imgData.width, imgData.height, { 
+                                inversionAttempts: 'attemptBoth' 
+                            });
+                            if (code) qrFound = code.data;
+                        } catch(e) {
+                            console.error('jsQR image scan failed:', e);
+                        }
+                    }
+
+                    // Fallback: BarcodeDetector
+                    if (!qrFound && 'BarcodeDetector' in window) {
                         try {
                             const detector = new BarcodeDetector({ formats: ['qr_code'] });
                             const barcodes = await detector.detect(canvas);
                             if (barcodes.length > 0) qrFound = barcodes[0].rawValue;
-                        } catch(e) {}
-                    }
-
-                    // 2. Try jsQR
-                    if (!qrFound && typeof jsQR !== 'undefined') {
-                        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        const code = jsQR(imgData.data, imgData.width, imgData.height, { inversionAttempts: 'attemptBoth' });
-                        if (code) qrFound = code.data;
+                        } catch(e) {
+                            console.error('BarcodeDetector image scan failed:', e);
+                        }
                     }
 
                     if (qrFound) {

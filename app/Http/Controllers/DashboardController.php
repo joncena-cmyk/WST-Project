@@ -150,7 +150,7 @@ class DashboardController extends Controller
         // Approval Queues
         $pendingEvents = Event::with('creator')
             ->whereIn('status', [Event::STATUS_SUBMITTED, Event::STATUS_UNDER_REVIEW])
-            ->latest('submitted_at')
+            ->latest('created_at')
             ->get();
 
         $pendingDocuments = Document::with(['uploader', 'event'])
