@@ -16,6 +16,7 @@ class Document extends Model
         'title',
         'category',
         'event_id',
+        'partnership_id',
         'uploaded_by',
         'file_path',
         'file_name',
@@ -75,6 +76,11 @@ class Document extends Model
     public function event(): BelongsTo
     {
         return $this->belongsTo(Event::class, 'event_id');
+    }
+
+    public function partnership(): BelongsTo
+    {
+        return $this->belongsTo(Partnership::class, 'partnership_id');
     }
 
     public function reviews(): HasMany

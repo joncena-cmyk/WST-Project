@@ -13,11 +13,13 @@ use Illuminate\View\View;
 class PostController extends Controller
 {
     /** Community feed */
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', Post::class);
 
-        $posts = Post::with([
+        $filter = $request->query('filter', 'all');
+
+        $query = Post::with([
                 'author.program',
                 'images',
                 'reactions',
@@ -25,11 +27,25 @@ class PostController extends Controller
                 'comments.author',
                 'comments.replies.author',
             ])
-            ->where('is_hidden', false)
-            ->latest()
-            ->paginate(15);
+            ->where('is_hidden', false);
 
-        return view('community.index', compact('posts'));
+        if ($filter === 'official') {
+            $query->where('type', Post::TYPE_OFFICIAL);
+        } elseif ($filter === 'community') {
+            $query->where('type', Post::TYPE_COMMUNITY);
+        }
+
+        $posts = $query->latest()->paginate(15)->withQueryString();
+
+        $spotlightEvent = \App\Models\Event::whereIn('status', ['published', 'ongoing'])
+            ->where('event_date', '>=', now())
+            ->orderBy('event_date')
+            ->first();
+
+        $totalMembers = \App\Models\User::count();
+        $totalPosts   = Post::where('is_hidden', false)->count();
+
+        return view('community.index', compact('posts', 'filter', 'spotlightEvent', 'totalMembers', 'totalPosts'));
     }
 
     /** Store a new post */

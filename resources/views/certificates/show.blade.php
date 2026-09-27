@@ -55,9 +55,16 @@
                         <p class="text-comsoc-600 text-xs font-semibold">CCIS · University of Makati</p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Certificate No.</p>
-                    <p class="font-mono text-sm font-bold text-comsoc-700">{{ $certificate->certificate_number }}</p>
+                <div class="text-right flex items-center gap-3">
+                    <div>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Certificate No.</p>
+                        <p class="font-mono text-sm font-bold text-comsoc-800">{{ $certificate->certificate_number }}</p>
+                        <p class="text-[9px] text-gray-400 mt-0.5">Scan QR to authenticate</p>
+                    </div>
+                    <div class="p-1.5 bg-white border border-gray-200 rounded-xl shadow-xs">
+                        <img src="{{ (new \chillerlan\QRCode\QRCode)->render(route('certificates.verify', $certificate->certificate_number)) }}"
+                             alt="Verification QR" class="w-14 h-14"/>
+                    </div>
                 </div>
             </div>
 
@@ -122,7 +129,10 @@
 
     {{-- Verification note --}}
     <p class="no-print mt-4 text-xs text-gray-400 text-center">
-        Certificate {{ $certificate->certificate_number }} · Issued by COMSOC Hub · Verify at comsoc.umak.edu.ph
+        Certificate <span class="font-mono font-bold text-gray-600">{{ $certificate->certificate_number }}</span> · Issued by COMSOC Hub · 
+        <a href="{{ route('certificates.verify', $certificate->certificate_number) }}" target="_blank" class="text-comsoc-600 hover:text-comsoc-800 underline font-semibold">
+            Verify authenticity online →
+        </a>
     </p>
 
 </body>

@@ -125,6 +125,16 @@ class EventTaskController extends Controller
             'created_by'   => Auth::id(),
         ]);
 
+        // Notify assignee if assigned
+        if ($task->assignee && $task->assigned_to !== Auth::id()) {
+            $task->assignee->notify(new \App\Notifications\GeneralComsocNotification(
+                title: "New Task Assigned: {$task->title}",
+                message: "You have been assigned a task for '{$event->title}' with {$task->priority} priority.",
+                actionUrl: route('tasks.my-tasks'),
+                type: $task->priority === 'urgent' ? 'warning' : 'info'
+            ));
+        }
+
         return back()->with('success', "Task '{$task->title}' created successfully.");
     }
 

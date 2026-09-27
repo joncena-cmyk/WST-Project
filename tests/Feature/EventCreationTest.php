@@ -22,11 +22,11 @@ class EventCreationTest extends TestCase
         $response = $this->actingAs($officer)->post(route('events.store'), [
             'title'                 => 'Tech Innovation Summit 2026',
             'description'           => 'A summit for CCIS students.',
-            'event_date'            => '2026-08-26',
+            'event_date'            => now()->addDays(7)->format('Y-m-d'),
             'start_time'            => '09:05',
             'end_time'              => '17:05',
             'venue'                 => 'Auditorium',
-            'registration_deadline' => '2026-08-25T05:06',
+            'registration_deadline' => now()->addDays(5)->format('Y-m-d\TH:i'),
             'participant_limit'     => '',
             'requirements'          => ['Student ID required'],
         ]);

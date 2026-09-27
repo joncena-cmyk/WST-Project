@@ -90,7 +90,7 @@
                     </a>
                     <a href="{{ route('register') }}"
                        class="inline-flex items-center px-4 py-2 bg-comsoc-700 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-800 transition-colors">
-                        Join COMSOC
+                        Join us
                     </a>
                 @endauth
                 <button @click="mobileOpen = !mobileOpen" class="lg:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg ml-1">

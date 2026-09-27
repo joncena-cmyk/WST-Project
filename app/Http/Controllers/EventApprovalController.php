@@ -56,12 +56,11 @@ class EventApprovalController extends Controller
     {
         $this->authorizeAdviser();
 
-        // Allow review of submitted or under_review events
-        abort_unless(
-            in_array($event->status, [Event::STATUS_SUBMITTED, Event::STATUS_UNDER_REVIEW]),
-            422,
-            'This event cannot be reviewed in its current status.'
-        );
+        // Gracefully handle if event is already reviewed
+        if (!in_array($event->status, [Event::STATUS_SUBMITTED, Event::STATUS_UNDER_REVIEW])) {
+            return redirect()->route('events.approval.index')
+                ->with('info', "Event '{$event->title}' has already been reviewed ({$event->getStatusLabel()}).");
+        }
 
         $data = $request->validate([
             'action'  => ['required', 'in:approved,rejected,returned'],
@@ -74,6 +73,12 @@ class EventApprovalController extends Controller
             'returned' => Event::STATUS_RETURNED,
         ];
 
+        $messages = [
+            'approved' => 'Event has been approved and is now authorized for publishing.',
+            'rejected' => 'Event proposal has been rejected.',
+            'returned' => 'Event has been returned for revisions.',
+        ];
+
         $event->update(['status' => $statusMap[$data['action']]]);
 
         EventApproval::create([
@@ -83,11 +88,16 @@ class EventApprovalController extends Controller
             'remarks'     => $data['remarks'] ?? null,
         ]);
 
-        $messages = [
-            'approved' => 'Event approved. The officer can now publish it.',
-            'rejected' => 'Event rejected.',
-            'returned' => 'Event returned to officer for revision.',
-        ];
+        // Notify event creator
+        if ($event->creator) {
+            $type = $data['action'] === 'approved' ? 'success' : ($data['action'] === 'returned' ? 'warning' : 'danger');
+            $event->creator->notify(new \App\Notifications\GeneralComsocNotification(
+                title: "Event " . ucfirst($data['action']) . ": " . $event->title,
+                message: "Adviser decision: " . ($messages[$data['action']] ?? '') . ($data['remarks'] ? " Remarks: " . $data['remarks'] : ""),
+                actionUrl: route('events.show', $event),
+                type: $type
+            ));
+        }
 
         return redirect()->route('events.approval.index')
             ->with('success', $messages[$data['action']]);

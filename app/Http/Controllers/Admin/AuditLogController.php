@@ -12,7 +12,16 @@ class AuditLogController extends Controller
 {
     public function index(Request $request): View
     {
-        abort_unless(Auth::check() && Auth::user()->isAdmin(), 403, 'Unauthorized');
+        abort_unless(
+            Auth::check() && (
+                Auth::user()->isAdmin() ||
+                Auth::user()->isAuditor() ||
+                Auth::user()->isPresident() ||
+                Auth::user()->isAdviser()
+            ),
+            403,
+            'Unauthorized'
+        );
 
         $query = AuditLog::with('user')->latest('created_at');
 

@@ -154,10 +154,12 @@
         @php $count = $post->images->count(); @endphp
         <div class="mx-0 mb-0">
             @if($count === 1)
-                <img src="{{ asset('storage/' . $post->images->first()->path) }}"
-                     alt="Post image"
-                     class="w-full max-h-[500px] object-cover"
-                     loading="lazy"/>
+                <div class="bg-gray-50/80 flex items-center justify-center overflow-hidden max-h-[360px] border-y border-gray-100">
+                    <img src="{{ asset('storage/' . $post->images->first()->path) }}"
+                         alt="Post image"
+                         class="max-h-[360px] w-auto max-w-full object-contain mx-auto transition-transform duration-200 hover:scale-[1.01]"
+                         loading="lazy"/>
+                </div>
             @elseif($count === 2)
                 <div class="grid grid-cols-2 gap-0.5">
                     @foreach($post->images as $image)

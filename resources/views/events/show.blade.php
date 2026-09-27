@@ -35,6 +35,20 @@
             @endif
 
             <div class="p-6">
+                @if($event->partner || $event->partnership)
+                    <div class="mb-3 flex items-center gap-2 flex-wrap">
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                            <svg class="w-3.5 h-3.5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/></svg>
+                            Co-Presented with {{ $event->partner ? $event->partner->name : ($event->partnership->partner->name ?? 'Partner Organization') }}
+                        </span>
+                        @if($event->partnership)
+                            <a href="{{ route('partnerships.show', $event->partnership) }}" class="text-xs font-semibold text-comsoc-600 hover:underline">
+                                View Partnership Pipeline →
+                            </a>
+                        @endif
+                    </div>
+                @endif
+
                 <div class="flex items-start justify-between gap-4 mb-4">
                     <h1 class="text-2xl font-black text-gray-900 leading-tight">{{ $event->title }}</h1>
                     <span class="inline-flex shrink-0 px-3 py-1 rounded-full text-sm font-semibold {{ $event->getStatusColor() }}">
@@ -117,11 +131,59 @@
                         </ul>
                     </div>
                 @endif
+        {{-- Completed / Archived Event Summary --}}
+        @if($event->isCompleted())
+            @php
+                $myCertificate = $event->certificates->where('user_id', Auth::id())->first();
+                $wasPresent = $event->attendance->where('user_id', Auth::id())->first();
+            @endphp
+            <div class="bg-gradient-to-r from-slate-900 to-slate-950 text-white rounded-2xl p-6 shadow-sm border border-slate-800 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-400 text-emerald-950">
+                                Event Concluded
+                            </span>
+                            <span class="text-xs text-slate-400">Archived Record #{{ str_pad($event->id, 4, '0', STR_PAD_LEFT) }}</span>
+                        </div>
+                        <h3 class="text-lg font-black text-white mt-1">Accomplishment &amp; Turnout Summary</h3>
+                    </div>
+                    @if($myCertificate)
+                        <a href="{{ route('certificates.show', $myCertificate) }}"
+                           class="px-4 py-2 bg-gold-400 hover:bg-gold-500 text-comsoc-950 font-black text-xs rounded-xl transition shadow-xs flex items-center gap-1.5 shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138z"/>
+                            </svg>
+                            View My Certificate →
+                        </a>
+                    @endif
+                </div>
+
+                <div class="grid grid-cols-3 gap-3 p-4 bg-white/5 border border-white/10 rounded-xl text-center">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Turnout Rate</p>
+                        <p class="text-lg font-black text-emerald-400 mt-0.5">{{ $event->turnoutPercentage() }}%</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Verified Attendance</p>
+                        <p class="text-lg font-black text-white mt-0.5">{{ $event->attendedCount() }} attendees</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Certificates Issued</p>
+                        <p class="text-lg font-black text-blue-400 mt-0.5">{{ $event->certificatesCount() }} issued</p>
+                    </div>
+                </div>
+
+                @if($wasPresent && !$myCertificate)
+                    <p class="text-xs text-slate-300 italic">
+                        ✓ Your attendance was verified for this event. Certificate issuance is being finalized by the Secretariat.
+                    </p>
+                @endif
             </div>
-        </div>
+        @endif
 
         {{-- Registration action --}}
-        @if($event->isPublic())
+        @if($event->isPublic() && !$event->isCompleted())
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5">
                 @if($userRegistration)
                     <div class="flex items-center justify-between flex-wrap gap-4">
@@ -136,19 +198,26 @@
                                 <p class="text-xs text-gray-500">Registered {{ $userRegistration->created_at->diffForHumans() }}</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 flex-wrap">
                             <a href="{{ route('attendance.pass', $event) }}"
-                               class="inline-flex items-center gap-2 px-5 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-950 text-sm font-black rounded-xl transition shadow-xs">
+                               class="inline-flex items-center gap-2 px-4 py-2 bg-yellow-400 hover:bg-yellow-500 text-gray-950 text-sm font-black rounded-xl transition shadow-xs">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
                                 </svg>
-                                View My QR Pass
+                                View QR Pass
+                            </a>
+                            <a href="{{ route('attendance.qr.download', $event) }}" download
+                               class="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 text-xs font-bold rounded-xl transition shadow-xs">
+                                <svg class="w-3.5 h-3.5 text-comsoc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                Download QR
                             </a>
                             <form method="POST" action="{{ route('events.registration.cancel', $userRegistration) }}">
                                 @csrf
                                 <button type="submit"
                                         onclick="return confirm('Cancel your registration?')"
-                                        class="text-xs text-red-500 hover:text-red-700 font-medium transition-colors">
+                                        class="text-xs text-red-500 hover:text-red-700 font-medium transition-colors px-2 py-1">
                                     Cancel
                                 </button>
                             </form>

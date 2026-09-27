@@ -90,7 +90,7 @@ class CertificateController extends Controller
             return back()->with('error', 'A certificate has already been issued to this attendee.');
         }
 
-        Certificate::create([
+        $cert = Certificate::create([
             'user_id'            => $data['user_id'],
             'event_id'           => $event->id,
             'attendance_id'      => $attendance->id,
@@ -99,6 +99,15 @@ class CertificateController extends Controller
             'issued_by'          => Auth::id(),
             'issued_at'          => now(),
         ]);
+
+        if ($attendance->user) {
+            $attendance->user->notify(new \App\Notifications\GeneralComsocNotification(
+                title: "Certificate Ready: " . $event->title,
+                message: "Your official Certificate of Attendance is now available to view and download.",
+                actionUrl: route('certificates.show', $cert),
+                type: 'success'
+            ));
+        }
 
         return back()->with('success', 'Certificate issued successfully.');
     }
@@ -125,7 +134,7 @@ class CertificateController extends Controller
 
             if ($exists) continue;
 
-            Certificate::create([
+            $cert = Certificate::create([
                 'user_id'            => $record->user_id,
                 'event_id'           => $event->id,
                 'attendance_id'      => $record->id,
@@ -134,6 +143,16 @@ class CertificateController extends Controller
                 'issued_by'          => Auth::id(),
                 'issued_at'          => now(),
             ]);
+
+            // Notify student
+            if ($record->user) {
+                $record->user->notify(new \App\Notifications\GeneralComsocNotification(
+                    title: "Certificate Ready: " . $event->title,
+                    message: "Your official Certificate of Attendance is now available to view and download.",
+                    actionUrl: route('certificates.show', $cert),
+                    type: 'success'
+                ));
+            }
             $issued++;
         }
 
@@ -158,5 +177,18 @@ class CertificateController extends Controller
         ]);
 
         return back()->with('success', 'Certificate revoked.');
+    }
+
+    /**
+     * Public Certificate Verification Portal.
+     * Accessible by anyone with the certificate number or QR code.
+     */
+    public function verifyPublic(string $certificate_number): View
+    {
+        $certificate = Certificate::with(['user.program', 'event', 'issuedBy'])
+            ->where('certificate_number', $certificate_number)
+            ->first();
+
+        return view('certificates.verify', compact('certificate', 'certificate_number'));
     }
 }

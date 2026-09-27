@@ -7,6 +7,7 @@ use App\Http\Controllers\AnalyticsReportController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\CandidateController;
 use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\CollaborationActivityController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\CommitteeController;
 use App\Http\Controllers\DashboardController;
@@ -19,6 +20,10 @@ use App\Http\Controllers\EventRegistrationController;
 use App\Http\Controllers\EventTaskController;
 use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\ModerationController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PartnerOrganizationController;
+use App\Http\Controllers\PartnershipController;
+use App\Http\Controllers\PartnershipDocumentController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
@@ -32,6 +37,16 @@ Route::get('/', function () {
 Route::get('/about', function () {
     return view('about');
 })->name('about');
+
+// Public Certificate Verification (no auth required)
+Route::get('/verify-certificate/{certificate_number}', [CertificateController::class, 'verifyPublic'])
+    ->name('certificates.verify');
+
+// Public Partnership Response & Acceptance Portal (no auth required for partner orgs)
+Route::get('/partnerships/{partnership}/respond/{token}', [PartnershipController::class, 'showRespond'])
+    ->name('partnerships.respond');
+Route::post('/partnerships/{partnership}/respond/{token}', [PartnershipController::class, 'submitRespond'])
+    ->name('partnerships.respond.submit');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -47,9 +62,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // -----------------------------------------------------------------------
+    // Notifications
+    // -----------------------------------------------------------------------
+    Route::prefix('notifications')->name('notifications.')->group(function () {
+        Route::get('/',                 [NotificationController::class, 'index'])->name('index');
+        Route::get('/quick',            [NotificationController::class, 'quick'])->name('quick');
+        Route::post('/{id}/read',       [NotificationController::class, 'markAsRead'])->name('read');
+        Route::post('/mark-all-read',   [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::delete('/{id}',          [NotificationController::class, 'destroy'])->name('destroy');
+    });
+
+    // -----------------------------------------------------------------------
     // My Membership (any authenticated user)
     // -----------------------------------------------------------------------
-    Route::get('/membership', [MembershipController::class, 'index'])->name('membership.index');
+    Route::get('/membership',        [MembershipController::class, 'index'])->name('membership.index');
+    Route::post('/membership/apply', [MembershipController::class, 'apply'])->name('membership.apply');
 
     // -----------------------------------------------------------------------
     // Community
@@ -73,6 +100,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // -----------------------------------------------------------------------
     Route::prefix('events')->name('events.')->group(function () {
         Route::get('/',                                     [EventController::class, 'index'])->name('index');
+        Route::get('/archive',                              [EventController::class, 'archive'])->name('archive');
         Route::get('/my-events',                            [EventRegistrationController::class, 'myEvents'])->name('my-events');
         Route::get('/manage',                               [EventController::class, 'manage'])->name('manage');
         Route::get('/create',                               [EventController::class, 'create'])->name('create');
@@ -83,6 +111,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{event}/submit',                      [EventController::class, 'submit'])->name('submit');
         Route::post('/{event}/publish',                     [EventController::class, 'publish'])->name('publish');
         Route::post('/{event}/cancel',                      [EventController::class, 'cancel'])->name('cancel');
+        Route::post('/{event}/archive',                     [EventController::class, 'archiveEvent'])->name('archive-event');
         Route::get('/{event}/participants',                 [EventController::class, 'participants'])->name('participants');
         Route::post('/{event}/register',                    [EventRegistrationController::class, 'store'])->name('register');
         Route::post('/registrations/{registration}/cancel', [EventRegistrationController::class, 'cancel'])->name('registration.cancel');
@@ -101,11 +130,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // QR Attendance (Phase 4)
     // -----------------------------------------------------------------------
     Route::prefix('attendance')->name('attendance.')->group(function () {
-        Route::get('/pass/{event}',    [AttendanceController::class, 'showPass'])->name('pass');
-        Route::get('/scanner/{event}', [AttendanceController::class, 'scannerPage'])->name('scanner');
-        Route::post('/checkin/{event}',[AttendanceController::class, 'checkIn'])->name('checkin');
-        Route::post('/manual/{event}', [AttendanceController::class, 'manualCheckIn'])->name('manual');
-        Route::get('/list/{event}',    [AttendanceController::class, 'index'])->name('index');
+        Route::get('/pass/{event}',             [AttendanceController::class, 'showPass'])->name('pass');
+        Route::get('/pass/{event}/download-qr', [AttendanceController::class, 'downloadQr'])->name('qr.download');
+        Route::get('/scanner/{event}',          [AttendanceController::class, 'scannerPage'])->name('scanner');
+        Route::post('/checkin/{event}',         [AttendanceController::class, 'checkIn'])->name('checkin');
+        Route::post('/manual/{event}',          [AttendanceController::class, 'manualCheckIn'])->name('manual');
+        Route::get('/list/{event}',             [AttendanceController::class, 'index'])->name('index');
     });
 
     // -----------------------------------------------------------------------
@@ -221,6 +251,37 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // -----------------------------------------------------------------------
+    // Partnerships & External Collaborations (Phase 11)
+    // -----------------------------------------------------------------------
+    Route::resource('partner-organizations', PartnerOrganizationController::class);
+
+    Route::prefix('partnerships')->name('partnerships.')->group(function () {
+        Route::get('/',                                  [PartnershipController::class, 'index'])->name('index');
+        Route::get('/create',                            [PartnershipController::class, 'create'])->name('create');
+        Route::post('/',                                 [PartnershipController::class, 'store'])->name('store');
+        Route::get('/{partnership}',                     [PartnershipController::class, 'show'])->name('show');
+        Route::get('/{partnership}/edit',                [PartnershipController::class, 'edit'])->name('edit');
+        Route::put('/{partnership}',                     [PartnershipController::class, 'update'])->name('update');
+        Route::delete('/{partnership}',                  [PartnershipController::class, 'destroy'])->name('destroy');
+        Route::post('/{partnership}/status',             [PartnershipController::class, 'transitionStatus'])->name('status');
+        Route::post('/{partnership}/save-letter',        [PartnershipController::class, 'saveLetter'])->name('save-letter');
+        Route::post('/{partnership}/send-email',          [PartnershipController::class, 'sendEmail'])->name('send-email');
+        Route::post('/{partnership}/submit-to-adviser',  [PartnershipController::class, 'submitToAdviser'])->name('submit-to-adviser');
+        Route::post('/{partnership}/endorse',            [PartnershipController::class, 'endorse'])->name('endorse');
+        Route::post('/{partnership}/spawn-event',        [PartnershipController::class, 'spawnEvent'])->name('spawn-event');
+
+        // Activities
+        Route::post('/{partnership}/activities',         [CollaborationActivityController::class, 'store'])->name('activities.store');
+        Route::patch('/activities/{activity}',           [CollaborationActivityController::class, 'updateStatus'])->name('activities.update-status');
+        Route::delete('/activities/{activity}',          [CollaborationActivityController::class, 'destroy'])->name('activities.destroy');
+
+        // Documents
+        Route::post('/{partnership}/documents',          [PartnershipDocumentController::class, 'store'])->name('documents.store');
+        Route::get('/documents/{document}/download',     [PartnershipDocumentController::class, 'download'])->name('documents.download');
+        Route::delete('/documents/{document}',           [PartnershipDocumentController::class, 'destroy'])->name('documents.destroy');
+    });
+
+    // -----------------------------------------------------------------------
     // Admin — User Management (admin only)
     // -----------------------------------------------------------------------
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -229,11 +290,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('users/{user}',  [AdminUserController::class, 'update'])->name('users.update');
 
         // Membership Management (officers+)
-        Route::get('memberships',                   [AdminMembershipController::class, 'index'])->name('memberships.index');
-        Route::get('memberships/create',            [AdminMembershipController::class, 'create'])->name('memberships.create');
-        Route::post('memberships',                  [AdminMembershipController::class, 'store'])->name('memberships.store');
-        Route::get('memberships/{membership}/edit', [AdminMembershipController::class, 'edit'])->name('memberships.edit');
-        Route::patch('memberships/{membership}',    [AdminMembershipController::class, 'update'])->name('memberships.update');
+        Route::get('memberships',                       [AdminMembershipController::class, 'index'])->name('memberships.index');
+        Route::get('memberships/create',                [AdminMembershipController::class, 'create'])->name('memberships.create');
+        Route::post('memberships',                      [AdminMembershipController::class, 'store'])->name('memberships.store');
+        Route::get('memberships/{membership}/edit',     [AdminMembershipController::class, 'edit'])->name('memberships.edit');
+        Route::patch('memberships/{membership}',        [AdminMembershipController::class, 'update'])->name('memberships.update');
+        Route::post('memberships/{membership}/approve', [AdminMembershipController::class, 'approve'])->name('memberships.approve');
+        Route::post('memberships/{membership}/reject',  [AdminMembershipController::class, 'reject'])->name('memberships.reject');
 
         // Security & Audit Logs (Phase 9)
         Route::get('audit-logs',                    [AdminAuditLogController::class, 'index'])->name('audit-logs.index');

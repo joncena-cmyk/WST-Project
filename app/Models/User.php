@@ -21,17 +21,41 @@ class User extends Authenticatable implements MustVerifyEmail
     const ROLE_PROGRAM_REP  = 'program_rep';
     const ROLE_OFFICER      = 'officer';
     const ROLE_PRESIDENT    = 'president';
+    const ROLE_VP_INTERNAL  = 'vp_internal';
+    const ROLE_VP_EXTERNAL  = 'vp_external';
+    const ROLE_SECRETARY    = 'secretary';
+    const ROLE_TREASURER    = 'treasurer';
+    const ROLE_AUDITOR      = 'auditor';
+    const ROLE_PIO          = 'pio';
     const ROLE_ADVISER      = 'adviser';
     const ROLE_ADMIN        = 'admin';
 
     const ROLES = [
-        self::ROLE_STUDENT     => 'Student',
-        self::ROLE_MEMBER      => 'Member',
-        self::ROLE_PROGRAM_REP => 'Program Representative',
-        self::ROLE_OFFICER     => 'Officer',
-        self::ROLE_PRESIDENT   => 'President',
-        self::ROLE_ADVISER     => 'Adviser',
-        self::ROLE_ADMIN       => 'System Administrator',
+        self::ROLE_STUDENT      => 'Student',
+        self::ROLE_MEMBER       => 'Member',
+        self::ROLE_PROGRAM_REP  => 'Program Representative',
+        self::ROLE_OFFICER      => 'Officer',
+        self::ROLE_PRESIDENT    => 'President',
+        self::ROLE_VP_INTERNAL  => 'Vice President - Internal',
+        self::ROLE_VP_EXTERNAL  => 'Vice President - External',
+        self::ROLE_SECRETARY    => 'Secretary',
+        self::ROLE_TREASURER    => 'Treasurer',
+        self::ROLE_AUDITOR      => 'Auditor',
+        self::ROLE_PIO          => 'Public Information Officer (PIO)',
+        self::ROLE_ADVISER      => 'Adviser',
+        self::ROLE_ADMIN        => 'System Administrator',
+    ];
+
+    const OFFICER_ROLES = [
+        self::ROLE_OFFICER,
+        self::ROLE_PRESIDENT,
+        self::ROLE_VP_INTERNAL,
+        self::ROLE_VP_EXTERNAL,
+        self::ROLE_SECRETARY,
+        self::ROLE_TREASURER,
+        self::ROLE_AUDITOR,
+        self::ROLE_PIO,
+        self::ROLE_PROGRAM_REP,
     ];
 
     // Account statuses
@@ -149,26 +173,81 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->role === self::ROLE_ADVISER;
     }
 
+    public function isPresident(): bool
+    {
+        return $this->role === self::ROLE_PRESIDENT;
+    }
+
+    public function isVpInternal(): bool
+    {
+        return $this->role === self::ROLE_VP_INTERNAL;
+    }
+
+    public function isVpExternal(): bool
+    {
+        return $this->role === self::ROLE_VP_EXTERNAL;
+    }
+
+    public function isSecretary(): bool
+    {
+        return $this->role === self::ROLE_SECRETARY;
+    }
+
+    public function isTreasurer(): bool
+    {
+        return $this->role === self::ROLE_TREASURER;
+    }
+
+    public function isAuditor(): bool
+    {
+        return $this->role === self::ROLE_AUDITOR;
+    }
+
+    public function isPio(): bool
+    {
+        return $this->role === self::ROLE_PIO;
+    }
+
+    public function isProgramRep(): bool
+    {
+        return $this->role === self::ROLE_PROGRAM_REP;
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->role === self::ROLE_STUDENT;
+    }
+
+    public function isMember(): bool
+    {
+        return $this->role === self::ROLE_MEMBER;
+    }
+
+    public function isOfficer(): bool
+    {
+        return in_array($this->role, self::OFFICER_ROLES);
+    }
+
     public function isOfficerOrAbove(): bool
     {
-        return in_array($this->role, [
-            self::ROLE_OFFICER,
-            self::ROLE_PRESIDENT,
+        return in_array($this->role, array_merge(self::OFFICER_ROLES, [
             self::ROLE_ADVISER,
             self::ROLE_ADMIN,
-        ]);
+        ]));
     }
 
     public function isMemberOrAbove(): bool
     {
-        return in_array($this->role, [
-            self::ROLE_MEMBER,
-            self::ROLE_PROGRAM_REP,
-            self::ROLE_OFFICER,
-            self::ROLE_PRESIDENT,
-            self::ROLE_ADVISER,
-            self::ROLE_ADMIN,
-        ]);
+        return in_array($this->role, array_merge(
+            [self::ROLE_MEMBER, self::ROLE_PROGRAM_REP],
+            self::OFFICER_ROLES,
+            [self::ROLE_ADVISER, self::ROLE_ADMIN]
+        ));
+    }
+
+    public function scopeOfficers($query)
+    {
+        return $query->whereIn('role', array_merge(self::OFFICER_ROLES, [self::ROLE_ADVISER]));
     }
 
     public function isActive(): bool
@@ -178,7 +257,12 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function getRoleLabel(): string
     {
-        return self::ROLES[$this->role] ?? ucfirst($this->role);
+        return self::ROLES[$this->role] ?? ucfirst(str_replace('_', ' ', $this->role));
+    }
+
+    public function getRoleTitle(): string
+    {
+        return $this->getRoleLabel();
     }
 
     // ---------------------------------------------------------------------------

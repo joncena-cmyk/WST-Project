@@ -27,12 +27,22 @@ class CommentController extends Controller
             }
         }
 
-        Comment::create([
+        $comment = Comment::create([
             'post_id'   => $post->id,
             'user_id'   => Auth::id(),
             'parent_id' => $data['parent_id'] ?? null,
             'body'      => $data['body'],
         ]);
+
+        // Notify post author if not the commenter
+        if ($post->author && $post->user_id !== Auth::id()) {
+            $post->author->notify(new \App\Notifications\GeneralComsocNotification(
+                title: Auth::user()->name . " commented on your post",
+                message: '"' . \Illuminate\Support\Str::limit($comment->body, 80) . '"',
+                actionUrl: route('community.index') . '#post-' . $post->id,
+                type: 'info'
+            ));
+        }
 
         return back()->with('success', 'Comment posted.');
     }

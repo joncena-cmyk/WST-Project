@@ -58,4 +58,18 @@ class DashboardTest extends TestCase
         $response->assertRedirect(route('dashboard', absolute: false));
         $this->assertNotNull($user->fresh()->email_verified_at);
     }
+
+    public function test_president_can_view_officer_dashboard_with_all_role_stats(): void
+    {
+        $president = User::factory()->create([
+            'role'              => User::ROLE_PRESIDENT,
+            'account_status'    => User::STATUS_ACTIVE,
+            'email_verified_at' => now(),
+        ]);
+
+        $response = $this->actingAs($president)->get('/dashboard');
+
+        $response->assertStatus(200);
+        $response->assertSee('President');
+    }
 }

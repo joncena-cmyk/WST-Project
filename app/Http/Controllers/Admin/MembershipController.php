@@ -132,4 +132,63 @@ class MembershipController extends Controller
 
         return back()->with('success', 'Membership updated successfully.');
     }
+
+    /** Approve and activate a membership application */
+    public function approve(Request $request, Membership $membership): RedirectResponse
+    {
+        $this->authorizeOfficer();
+
+        $membership->update([
+            'status'      => Membership::STATUS_ACTIVE,
+            'approved_by' => Auth::id(),
+            'approved_at' => now(),
+            'start_date'  => $membership->start_date ?? now(),
+            'end_date'    => $membership->end_date ?? now()->addYear(),
+        ]);
+
+        // Promote student to member if applicable
+        if ($membership->user && $membership->user->isStudent()) {
+            $membership->user->update(['role' => User::ROLE_MEMBER]);
+        }
+
+        // Notify user
+        if ($membership->user) {
+            $membership->user->notify(new \App\Notifications\GeneralComsocNotification(
+                title: "🎉 COMSOC Membership Approved!",
+                message: "Your membership for Academic Year {$membership->academic_year} has been verified and activated. Welcome to the official CCIS Computer Society!",
+                actionUrl: route('membership.index'),
+                type: 'success'
+            ));
+        }
+
+        return back()->with('success', "Membership for {$membership->user->name} has been approved and activated.");
+    }
+
+    /** Reject a membership application */
+    public function reject(Request $request, Membership $membership): RedirectResponse
+    {
+        $this->authorizeOfficer();
+
+        $data = $request->validate([
+            'rejection_reason' => ['required', 'string', 'max:500'],
+        ]);
+
+        $membership->update([
+            'status'           => Membership::STATUS_REJECTED,
+            'rejection_reason' => $data['rejection_reason'],
+        ]);
+
+        // Notify user
+        if ($membership->user) {
+            $membership->user->notify(new \App\Notifications\GeneralComsocNotification(
+                title: "Membership Application Update",
+                message: "Your application could not be verified. Reason: {$data['rejection_reason']}. You may re-apply with updated proof of payment.",
+                actionUrl: route('membership.index'),
+                type: 'danger'
+            ));
+        }
+
+        return back()->with('success', "Membership application for {$membership->user->name} has been rejected.");
+    }
 }
+

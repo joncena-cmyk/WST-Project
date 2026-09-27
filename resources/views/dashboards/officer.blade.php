@@ -82,6 +82,150 @@
             </div>
         </div>
 
+        {{-- ===== ROLE-SPECIFIC FOCUS DESK ===== --}}
+        @if($user->isVpExternal())
+            <div class="bg-gradient-to-r from-blue-900 to-indigo-950 border border-blue-800 text-white rounded-2xl p-5 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-400 text-blue-950 uppercase">VP External Desk</span>
+                            <span class="text-xs text-blue-200">Partnerships &amp; Industry Linkages</span>
+                        </div>
+                        <h3 class="text-lg font-black text-white">External Relations Overview</h3>
+                        <p class="text-xs text-blue-200">
+                            <strong>{{ $roleStats['activePartnerships'] ?? 0 }}</strong> active partnerships · <strong>{{ $roleStats['partnerOrgsCount'] ?? 0 }}</strong> partner organizations · <strong>{{ $roleStats['pendingPartnerships'] ?? 0 }}</strong> proposals awaiting review.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <a href="{{ route('partnerships.create') }}" class="px-3.5 py-2 bg-blue-400 hover:bg-blue-300 text-blue-950 font-bold text-xs rounded-xl transition shadow-xs">
+                            + Propose Partnership
+                        </a>
+                        <a href="{{ route('partner-organizations.create') }}" class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition">
+                            + Register Partner Org
+                        </a>
+                        <a href="{{ route('partnerships.index') }}" class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition">
+                            View Partnerships Hub →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @elseif($user->isTreasurer())
+            <div class="bg-gradient-to-r from-emerald-900 to-teal-950 border border-emerald-800 text-white rounded-2xl p-5 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-400 text-emerald-950 uppercase">Treasurer Desk</span>
+                            <span class="text-xs text-emerald-200">Financial &amp; Membership Operations</span>
+                        </div>
+                        <h3 class="text-lg font-black text-white">Membership Dues &amp; Ledger</h3>
+                        <p class="text-xs text-emerald-200">
+                            <strong>{{ $roleStats['activeMemberships'] ?? 0 }}</strong> active verified members · <strong>{{ $roleStats['pendingMemberships'] ?? 0 }}</strong> membership applications pending payment confirmation.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <a href="{{ route('admin.memberships.index') }}" class="px-3.5 py-2 bg-emerald-400 hover:bg-emerald-300 text-emerald-950 font-bold text-xs rounded-xl transition shadow-xs">
+                            Verify Memberships →
+                        </a>
+                        <a href="{{ route('analytics.export.memberships') }}" class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition">
+                            Export Membership Report ↓
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @elseif($user->isAuditor())
+            <div class="bg-gradient-to-r from-purple-900 to-indigo-950 border border-purple-800 text-white rounded-2xl p-5 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-purple-400 text-purple-950 uppercase">Auditor Desk</span>
+                            <span class="text-xs text-purple-200">Compliance &amp; System Integrity</span>
+                        </div>
+                        <h3 class="text-lg font-black text-white">Audit Trail &amp; Verification Console</h3>
+                        <p class="text-xs text-purple-200">
+                            <strong>{{ $roleStats['totalAuditLogs'] ?? 0 }}</strong> recorded system transactions and state transitions tracked in the audit trail.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <a href="{{ route('admin.audit-logs.index') }}" class="px-3.5 py-2 bg-purple-400 hover:bg-purple-300 text-purple-950 font-bold text-xs rounded-xl transition shadow-xs">
+                            Inspect Audit Logs →
+                        </a>
+                        <a href="{{ route('admin.memberships.index') }}" class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition">
+                            Audit Memberships Roll
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @elseif($user->isSecretary())
+            <div class="bg-gradient-to-r from-amber-900 to-yellow-950 border border-amber-800 text-white rounded-2xl p-5 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-400 text-amber-950 uppercase">Secretary Desk</span>
+                            <span class="text-xs text-amber-200">Documentation &amp; Certificate Registry</span>
+                        </div>
+                        <h3 class="text-lg font-black text-white">Records &amp; Resolutions Registry</h3>
+                        <p class="text-xs text-amber-200">
+                            <strong>{{ $roleStats['totalDocuments'] ?? 0 }}</strong> documents archived · <strong>{{ $roleStats['issuedCertificates'] ?? 0 }}</strong> official event certificates issued to date.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <a href="{{ route('documents.create') }}" class="px-3.5 py-2 bg-amber-400 hover:bg-amber-300 text-amber-950 font-bold text-xs rounded-xl transition shadow-xs">
+                            + Upload Meeting Minutes / Doc
+                        </a>
+                        <a href="{{ route('documents.index') }}" class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition">
+                            Documents Hub →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @elseif($user->isPio())
+            <div class="bg-gradient-to-r from-rose-900 to-pink-950 border border-rose-800 text-white rounded-2xl p-5 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-rose-400 text-rose-950 uppercase">PIO Desk</span>
+                            <span class="text-xs text-rose-200">Public Relations &amp; Community Dispatch</span>
+                        </div>
+                        <h3 class="text-lg font-black text-white">Communications &amp; Moderation Center</h3>
+                        <p class="text-xs text-rose-200">
+                            <strong>{{ $roleStats['officialPosts'] ?? 0 }}</strong> official announcements broadcasted · <strong>{{ $roleStats['totalPosts'] ?? 0 }}</strong> community discussions published.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <a href="{{ route('community.index') }}" class="px-3.5 py-2 bg-rose-400 hover:bg-rose-300 text-rose-950 font-bold text-xs rounded-xl transition shadow-xs">
+                            + Post Official Announcement
+                        </a>
+                        <a href="{{ route('moderation.index') }}" class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition">
+                            Open Moderation Console →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @elseif($user->isProgramRep())
+            <div class="bg-gradient-to-r from-cyan-900 to-sky-950 border border-cyan-800 text-white rounded-2xl p-5 shadow-sm">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="space-y-1">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-cyan-400 text-cyan-950 uppercase">Program Representative Desk</span>
+                            <span class="text-xs text-cyan-200">{{ $roleStats['programName'] ?? 'Department' }} Cohort</span>
+                        </div>
+                        <h3 class="text-lg font-black text-white">{{ $roleStats['programName'] ?? 'Department' }} Student Representation</h3>
+                        <p class="text-xs text-cyan-200">
+                            <strong>{{ $roleStats['cohortMembers'] ?? 0 }}</strong> active registered members in your department cohort.
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <a href="{{ route('events.index') }}" class="px-3.5 py-2 bg-cyan-400 hover:bg-cyan-300 text-cyan-950 font-bold text-xs rounded-xl transition shadow-xs">
+                            Browse Events →
+                        </a>
+                        <a href="{{ route('tasks.my-tasks') }}" class="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition">
+                            My Assigned Tasks →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- ===== TWO-COLUMN: Active Events & Committee Tasks ===== --}}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {{-- Organization Events Operations --}}

@@ -12,15 +12,84 @@ use Illuminate\View\View;
 
 class EventController extends Controller
 {
-    /** Public event browse (published/ongoing) */
+    /** Auto-transition past events to completed status */
+    private function autoUpdateEventStatuses(): void
+    {
+        $today = now()->toDateString();
+        Event::whereIn('status', [Event::STATUS_PUBLISHED, Event::STATUS_ONGOING])
+            ->where('event_date', '<', $today)
+            ->update(['status' => Event::STATUS_COMPLETED]);
+    }
+
+    /** Public event browse (published/ongoing upcoming events) */
     public function index(): View
     {
+        $this->autoUpdateEventStatuses();
+
         $events = Event::with('creator')
-            ->whereIn('status', [Event::STATUS_PUBLISHED, Event::STATUS_ONGOING])
+            ->withCount(['activeRegistrations', 'attendance'])
+            ->upcoming()
             ->orderBy('event_date')
+            ->orderBy('start_time')
             ->paginate(12);
 
-        return view('events.index', compact('events'));
+        $upcomingCount = Event::upcoming()->count();
+        $archivedCount = Event::archived()->count();
+
+        return view('events.index', compact('events', 'upcomingCount', 'archivedCount'));
+    }
+
+    /** Public event archive (completed/archived finished events) */
+    public function archive(Request $request): View
+    {
+        $this->autoUpdateEventStatuses();
+
+        $query = Event::with(['creator', 'attendance', 'registrations', 'certificates'])
+            ->withCount(['activeRegistrations', 'attendance', 'certificates'])
+            ->archived()
+            ->orderBy('event_date', 'desc');
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('venue', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($year = $request->get('year')) {
+            $query->whereYear('event_date', $year);
+        }
+
+        $events = $query->paginate(9)->withQueryString();
+
+        $totalArchived = Event::archived()->count();
+        $totalAttendees = \App\Models\EventAttendance::whereHas('event', function ($q) {
+            $q->archived();
+        })->count();
+        $totalCertificates = \App\Models\Certificate::whereHas('event', function ($q) {
+            $q->archived();
+        })->count();
+
+        $years = Event::archived()
+            ->orderBy('event_date', 'desc')
+            ->pluck('event_date')
+            ->map(fn($d) => \Carbon\Carbon::parse($d)->year)
+            ->unique()
+            ->values();
+
+        $upcomingCount = Event::upcoming()->count();
+        $archivedCount = $totalArchived;
+
+        return view('events.archive', compact(
+            'events',
+            'totalArchived',
+            'totalAttendees',
+            'totalCertificates',
+            'years',
+            'upcomingCount',
+            'archivedCount'
+        ));
     }
 
     /** Officer: list their own events + all for admin */
@@ -43,7 +112,7 @@ class EventController extends Controller
     public function show(Event $event): View
     {
         $this->authorize('view', $event);
-        $event->load(['creator', 'requirements', 'approvals.reviewer']);
+        $event->load(['creator', 'requirements', 'approvals.reviewer', 'attendance.user', 'certificates']);
 
         $userRegistration = $event->registrations()
             ->where('user_id', Auth::id())
@@ -188,5 +257,14 @@ class EventController extends Controller
             ->orderBy('created_at')
             ->get();
         return view('events.participants', compact('event', 'registrations'));
+    }
+
+    /** Explicitly archive a completed event */
+    public function archiveEvent(Event $event): RedirectResponse
+    {
+        $this->authorize('archive', $event);
+        $event->update(['status' => Event::STATUS_ARCHIVED]);
+        return redirect()->route('events.archive')
+            ->with('success', "Event '{$event->title}' has been moved to the archive.");
     }
 }

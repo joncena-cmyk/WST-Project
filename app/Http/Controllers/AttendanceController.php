@@ -31,6 +31,34 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Student: download high-res QR code directly as PNG.
+     */
+    public function downloadQr(Event $event): \Symfony\Component\HttpFoundation\Response
+    {
+        $registration = EventRegistration::where('event_id', $event->id)
+            ->where('user_id', Auth::id())
+            ->where('status', EventRegistration::STATUS_REGISTERED)
+            ->firstOrFail();
+
+        $options = new \chillerlan\QRCode\QROptions([
+            'outputInterface' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
+            'scale'           => 14,
+            'imageTransparent'=> false,
+        ]);
+
+        $qrDataUri = (new \chillerlan\QRCode\QRCode($options))->render($registration->qr_code);
+        $base64 = preg_replace('#^data:image/\w+;base64,#i', '', $qrDataUri);
+        $binary = base64_decode($base64);
+
+        $filename = 'COMSOC-QR-' . \Illuminate\Support\Str::slug($event->title) . '-' . (Auth::user()->student_id ?? Auth::id()) . '.png';
+
+        return response($binary, 200, [
+            'Content-Type'        => 'image/png',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    /**
      * Officer: QR scanner page for an event.
      */
     public function scannerPage(Event $event): View|RedirectResponse

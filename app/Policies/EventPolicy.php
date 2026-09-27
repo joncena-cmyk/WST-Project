@@ -77,4 +77,10 @@ class EventPolicy
     {
         return $user->isActive() && ($user->isOfficerOrAbove() || $user->id === $event->created_by);
     }
+
+    /** Officers or admin can archive completed events */
+    public function archive(User $user, Event $event): bool
+    {
+        return $user->isActive() && $user->isOfficerOrAbove();
+    }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AuditLog;
 use App\Models\Certificate;
 use App\Models\Document;
 use App\Models\Event;
@@ -9,6 +10,8 @@ use App\Models\EventAttendance;
 use App\Models\EventRegistration;
 use App\Models\EventTask;
 use App\Models\Membership;
+use App\Models\PartnerOrganization;
+use App\Models\Partnership;
 use App\Models\Post;
 use App\Models\Program;
 use App\Models\User;
@@ -128,6 +131,43 @@ class DashboardController extends Controller
         // Recent Community posts
         $recentPosts = Post::with('user')->latest()->take(3)->get();
 
+        // Role-specific stats & context
+        $roleStats = [];
+
+        if ($user->isVpExternal() || $user->isPresident()) {
+            $roleStats['activePartnerships'] = Partnership::where('status', Partnership::STATUS_ACTIVE)->count();
+            $roleStats['partnerOrgsCount'] = PartnerOrganization::where('status', PartnerOrganization::STATUS_ACTIVE)->count();
+            $roleStats['pendingPartnerships'] = Partnership::where('status', Partnership::STATUS_UNDER_REVIEW)->count();
+        }
+
+        if ($user->isTreasurer() || $user->isPresident()) {
+            $roleStats['pendingMemberships'] = Membership::where('status', Membership::STATUS_PENDING)->count();
+            $roleStats['activeMemberships']  = Membership::where('status', Membership::STATUS_ACTIVE)->count();
+        }
+
+        if ($user->isAuditor() || $user->isPresident()) {
+            $roleStats['totalAuditLogs'] = AuditLog::count();
+            $roleStats['recentAuditLogs'] = AuditLog::with('user')->latest()->take(5)->get();
+        }
+
+        if ($user->isSecretary() || $user->isPresident()) {
+            $roleStats['issuedCertificates'] = Certificate::where('status', Certificate::STATUS_ISSUED)->count();
+            $roleStats['totalDocuments']     = Document::count();
+        }
+
+        if ($user->isPio() || $user->isPresident()) {
+            $roleStats['officialPosts'] = Post::where('type', Post::TYPE_OFFICIAL)->count();
+            $roleStats['totalPosts']    = Post::count();
+        }
+
+        if ($user->isProgramRep()) {
+            $user->load('program');
+            $roleStats['cohortMembers'] = $user->program_id
+                ? Membership::where('program_id', $user->program_id)->where('status', Membership::STATUS_ACTIVE)->count()
+                : 0;
+            $roleStats['programName'] = $user->program?->short_name ?? 'Your Program';
+        }
+
         return view('dashboards.officer', compact(
             'user',
             'totalActiveMembers',
@@ -138,7 +178,8 @@ class DashboardController extends Controller
             'pendingDocs',
             'activeEvents',
             'myTasks',
-            'recentPosts'
+            'recentPosts',
+            'roleStats'
         ));
     }
 

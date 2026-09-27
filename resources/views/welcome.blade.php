@@ -118,7 +118,7 @@
                     @if(Route::has('register'))
                         <a href="{{ route('register') }}"
                            class="inline-flex items-center px-4 py-2 bg-comsoc-700 text-white text-sm font-semibold rounded-lg hover:bg-comsoc-800 transition-colors shadow-sm">
-                            Join COMSOC
+                            Join Us
                         </a>
                     @endif
                 @endauth

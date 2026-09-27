@@ -21,6 +21,7 @@ class Event extends Model
     const STATUS_PUBLISHED   = 'published';
     const STATUS_ONGOING     = 'ongoing';
     const STATUS_COMPLETED   = 'completed';
+    const STATUS_ARCHIVED    = 'archived';
     const STATUS_CANCELLED   = 'cancelled';
 
     const STATUSES = [
@@ -32,6 +33,7 @@ class Event extends Model
         self::STATUS_PUBLISHED    => 'Published',
         self::STATUS_ONGOING      => 'Ongoing',
         self::STATUS_COMPLETED    => 'Completed',
+        self::STATUS_ARCHIVED     => 'Archived',
         self::STATUS_CANCELLED    => 'Cancelled',
     ];
 
@@ -44,12 +46,14 @@ class Event extends Model
         self::STATUS_APPROVED     => 'bg-comsoc-100 text-comsoc-700',
         self::STATUS_PUBLISHED    => 'bg-comsoc-600 text-white',
         self::STATUS_ONGOING      => 'bg-blue-600 text-white',
-        self::STATUS_COMPLETED    => 'bg-gray-600 text-white',
+        self::STATUS_COMPLETED    => 'bg-emerald-700 text-white',
+        self::STATUS_ARCHIVED     => 'bg-slate-700 text-white',
         self::STATUS_CANCELLED    => 'bg-red-100 text-red-700',
     ];
 
     protected $fillable = [
-        'created_by', 'title', 'description', 'event_date', 'start_time',
+        'created_by', 'partnership_id', 'partner_id', 'is_collaboration',
+        'title', 'description', 'event_date', 'start_time',
         'end_time', 'venue', 'registration_deadline', 'participant_limit',
         'image', 'status', 'published_at', 'cancelled_at', 'cancellation_reason',
     ];
@@ -61,6 +65,7 @@ class Event extends Model
             'registration_deadline' => 'datetime',
             'published_at'          => 'datetime',
             'cancelled_at'          => 'datetime',
+            'is_collaboration'      => 'boolean',
         ];
     }
 
@@ -70,6 +75,16 @@ class Event extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function partnership(): BelongsTo
+    {
+        return $this->belongsTo(Partnership::class, 'partnership_id');
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(PartnerOrganization::class, 'partner_id');
     }
 
     public function requirements(): HasMany
@@ -165,6 +180,52 @@ class Event extends Model
             ->where('user_id', $user->id)
             ->where('status', 'registered')
             ->exists();
+    }
+
+    public function isCompleted(): bool
+    {
+        return in_array($this->status, [self::STATUS_COMPLETED, self::STATUS_ARCHIVED]);
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->status === self::STATUS_ARCHIVED;
+    }
+
+    public function attendedCount(): int
+    {
+        return $this->attendance()->count();
+    }
+
+    public function certificatesCount(): int
+    {
+        return $this->certificates()->count();
+    }
+
+    public function turnoutPercentage(): int
+    {
+        $reg = $this->registeredCount();
+        if ($reg === 0) {
+            return $this->attendedCount() > 0 ? 100 : 0;
+        }
+        return (int) round(($this->attendedCount() / $reg) * 100);
+    }
+
+    public function scopeUpcoming($query)
+    {
+        return $query->whereIn('status', [self::STATUS_PUBLISHED, self::STATUS_ONGOING])
+                     ->where('event_date', '>=', now()->toDateString());
+    }
+
+    public function scopeArchived($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereIn('status', [self::STATUS_COMPLETED, self::STATUS_ARCHIVED])
+              ->orWhere(function ($past) {
+                  $past->whereIn('status', [self::STATUS_PUBLISHED, self::STATUS_ONGOING])
+                       ->where('event_date', '<', now()->toDateString());
+              });
+        });
     }
 
     public function getImageUrl(): ?string

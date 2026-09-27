@@ -16,6 +16,11 @@ class Membership extends Model
         'program_id',
         'academic_year',
         'status',
+        'payment_method',
+        'payment_reference',
+        'payment_amount',
+        'proof_of_payment_path',
+        'rejection_reason',
         'start_date',
         'end_date',
         'notes',
@@ -26,9 +31,10 @@ class Membership extends Model
     protected function casts(): array
     {
         return [
-            'start_date'  => 'date',
-            'end_date'    => 'date',
-            'approved_at' => 'datetime',
+            'start_date'     => 'date',
+            'end_date'       => 'date',
+            'approved_at'    => 'datetime',
+            'payment_amount' => 'decimal:2',
         ];
     }
 
@@ -37,6 +43,7 @@ class Membership extends Model
     const STATUS_ACTIVE    = 'active';
     const STATUS_EXPIRED   = 'expired';
     const STATUS_SUSPENDED = 'suspended';
+    const STATUS_REJECTED  = 'rejected';
 
     public function user(): BelongsTo
     {
@@ -56,5 +63,23 @@ class Membership extends Model
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
+    }
+
+    public function getProofOfPaymentUrl(): ?string
+    {
+        if ($this->proof_of_payment_path) {
+            return asset('storage/' . $this->proof_of_payment_path);
+        }
+        return null;
     }
 }
