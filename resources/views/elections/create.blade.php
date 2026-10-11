@@ -10,16 +10,16 @@
 
     <div class="max-w-4xl mx-auto" x-data="{
         positions: [
-            'President',
-            'Vice President for Internal Affairs',
-            'Vice President for External Affairs',
-            'Secretary General',
-            'Treasurer',
-            'Auditor',
-            'Public Information Officer'
+            { title: 'President', max_winners: 1 },
+            { title: 'Vice President for Internal Affairs', max_winners: 1 },
+            { title: 'Vice President for External Affairs', max_winners: 1 },
+            { title: 'Secretary General', max_winners: 1 },
+            { title: 'Treasurer', max_winners: 1 },
+            { title: 'Auditor', max_winners: 1 },
+            { title: 'Public Information Officer', max_winners: 1 }
         ],
         addPosition() {
-            this.positions.push('');
+            this.positions.push({ title: '', max_winners: 1 });
         },
         removePosition(index) {
             if (this.positions.length > 1) {
@@ -115,9 +115,15 @@
                     <template x-for="(pos, idx) in positions" :key="idx">
                         <div class="flex items-center gap-2">
                             <span class="w-7 h-7 rounded-lg bg-gray-100 text-gray-500 text-xs font-bold flex items-center justify-center shrink-0" x-text="idx + 1"></span>
-                            <input type="text" name="positions[]" x-model="positions[idx]" required
+                            <input type="text" :name="'positions[' + idx + '][title]'" x-model="pos.title" required
                                    placeholder="Position Title (e.g. Vice President)"
-                                   class="w-full text-xs border-gray-200 rounded-xl focus:ring-2 focus:ring-comsoc-500"/>
+                                   class="flex-1 text-xs border-gray-200 rounded-xl focus:ring-2 focus:ring-comsoc-500"/>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <label class="text-[10px] font-bold text-gray-400 whitespace-nowrap">Max Winners</label>
+                                <input type="number" :name="'positions[' + idx + '][max_winners]'" x-model.number="pos.max_winners"
+                                       min="1" max="50"
+                                       class="w-14 text-xs text-center border-gray-200 rounded-xl focus:ring-2 focus:ring-comsoc-500"/>
+                            </div>
                             <button type="button" @click="removePosition(idx)"
                                     class="p-2 text-gray-300 hover:text-red-500 rounded-lg transition"
                                     :disabled="positions.length <= 1">

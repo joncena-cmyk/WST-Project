@@ -15,6 +15,6 @@ class CandidatePolicy
 
     public function review(User $user): bool
     {
-        return $user->isOfficerOrAbove() || $user->isAdviser() || $user->isAdmin();
+        return $user->isOfficerOrAbove();
     }
 }

@@ -44,7 +44,7 @@ class ElectionController extends Controller
             'voting_start_at' => 'nullable|date',
             'voting_end_at'   => 'nullable|date|after_or_equal:voting_start_at',
             'positions'       => 'required|array|min:1',
-            'positions.*'     => 'required|string|max:100',
+            'positions.*'     => 'required',
         ]);
 
         $election = DB::transaction(function () use ($validated) {
@@ -60,13 +60,21 @@ class ElectionController extends Controller
                 'created_by'      => Auth::id(),
             ]);
 
-            foreach ($validated['positions'] as $idx => $posTitle) {
-                if (trim($posTitle) !== '') {
+            foreach ($validated['positions'] as $idx => $posData) {
+                if (is_array($posData)) {
+                    $title = trim($posData['title'] ?? '');
+                    $maxWinners = (int) ($posData['max_winners'] ?? 1);
+                } else {
+                    $title = trim((string) $posData);
+                    $maxWinners = 1;
+                }
+
+                if ($title !== '') {
                     ElectionPosition::create([
                         'election_id' => $election->id,
-                        'title'       => trim($posTitle),
+                        'title'       => $title,
                         'order'       => $idx + 1,
-                        'max_winners' => 1,
+                        'max_winners' => max(1, $maxWinners),
                     ]);
                 }
             }
@@ -135,6 +143,15 @@ class ElectionController extends Controller
 
         $oldStatus = $election->status;
         $newStatus = $validated['status'];
+
+        // Enforce state machine — prevent illegal jumps (e.g. draft → results_published)
+        if (!$election->canTransitionTo($newStatus)) {
+            return back()->with(
+                'error',
+                "Cannot transition from '{$election->getStatusLabel()}' to '{$newStatus}'. " .
+                "Allowed next states: " . implode(', ', Election::VALID_TRANSITIONS[$oldStatus] ?? ['none']) . "."
+            );
+        }
 
         $election->update(['status' => $newStatus]);
 

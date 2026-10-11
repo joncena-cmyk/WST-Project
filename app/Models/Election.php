@@ -17,6 +17,33 @@ class Election extends Model
     const STATUS_CLOSED            = 'closed';
     const STATUS_RESULTS_PUBLISHED = 'results_published';
 
+    /**
+     * Allowed forward transitions for the election status state machine.
+     * Each key is the current status; the value is the set of reachable next statuses.
+     */
+    const VALID_TRANSITIONS = [
+        self::STATUS_DRAFT             => [self::STATUS_FILING_OPEN],
+        self::STATUS_FILING_OPEN       => [self::STATUS_VOTING_OPEN, self::STATUS_DRAFT],
+        self::STATUS_VOTING_OPEN       => [self::STATUS_CLOSED],
+        self::STATUS_CLOSED            => [self::STATUS_RESULTS_PUBLISHED],
+        self::STATUS_RESULTS_PUBLISHED => [],
+    ];
+
+    public function canTransitionTo(string $newStatus): bool
+    {
+        return in_array($newStatus, self::VALID_TRANSITIONS[$this->status] ?? [], true);
+    }
+
+    /**
+     * Returns the list of statuses reachable from the current state,
+     * used to build a filtered dropdown in the UI.
+     */
+    public function allowedNextStatuses(): array
+    {
+        return self::VALID_TRANSITIONS[$this->status] ?? [];
+    }
+
+
     protected $fillable = [
         'title',
         'description',

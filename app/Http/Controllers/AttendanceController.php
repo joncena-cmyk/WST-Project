@@ -40,20 +40,31 @@ class AttendanceController extends Controller
             ->where('status', EventRegistration::STATUS_REGISTERED)
             ->firstOrFail();
 
-        $options = new \chillerlan\QRCode\QROptions([
-            'outputInterface' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
-            'scale'           => 14,
-            'imageTransparent'=> false,
-        ]);
+        if (extension_loaded('gd')) {
+            $options = new \chillerlan\QRCode\QROptions([
+                'outputInterface' => \chillerlan\QRCode\Output\QRGdImagePNG::class,
+                'scale'           => 14,
+                'imageTransparent'=> false,
+            ]);
+            $qrDataUri = (new \chillerlan\QRCode\QRCode($options))->render($registration->qr_code);
+            $base64 = preg_replace('#^data:image/\w+;base64,#i', '', $qrDataUri);
+            $binary = base64_decode($base64);
+            $mime = 'image/png';
+            $ext = 'png';
+        } else {
+            $options = new \chillerlan\QRCode\QROptions([
+                'outputInterface' => \chillerlan\QRCode\Output\QRMarkupSVG::class,
+                'scale'           => 14,
+            ]);
+            $binary = (new \chillerlan\QRCode\QRCode($options))->render($registration->qr_code);
+            $mime = 'image/svg+xml';
+            $ext = 'svg';
+        }
 
-        $qrDataUri = (new \chillerlan\QRCode\QRCode($options))->render($registration->qr_code);
-        $base64 = preg_replace('#^data:image/\w+;base64,#i', '', $qrDataUri);
-        $binary = base64_decode($base64);
-
-        $filename = 'COMSOC-QR-' . \Illuminate\Support\Str::slug($event->title) . '-' . (Auth::user()->student_id ?? Auth::id()) . '.png';
+        $filename = 'COMSOC-QR-' . \Illuminate\Support\Str::slug($event->title) . '-' . (Auth::user()->student_id ?? Auth::id()) . '.' . $ext;
 
         return response($binary, 200, [
-            'Content-Type'        => 'image/png',
+            'Content-Type'        => $mime,
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }

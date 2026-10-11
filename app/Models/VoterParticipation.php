@@ -15,6 +15,8 @@ class VoterParticipation extends Model
     protected $fillable = [
         'election_id',
         'user_id',
+        'receipt_code',
+        'verification_hash',
         'voted_at',
     ];
 

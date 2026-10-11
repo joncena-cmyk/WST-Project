@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class CandidateController extends Controller
@@ -45,7 +46,11 @@ class CandidateController extends Controller
         Gate::authorize('apply', [Candidate::class, $election]);
 
         $validated = $request->validate([
-            'position_id' => 'required|exists:election_positions,id',
+            'position_id' => [
+                'required',
+                Rule::exists('election_positions', 'id')
+                    ->where('election_id', $election->id),
+            ],
             'platform'    => 'required|string|max:3000',
             'party_name'  => 'nullable|string|max:100',
         ]);

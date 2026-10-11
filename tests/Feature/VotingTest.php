@@ -23,6 +23,7 @@ class VotingTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        $this->withoutVite();
 
         $this->officer = User::factory()->create([
             'role'           => User::ROLE_OFFICER,
@@ -114,5 +115,97 @@ class VotingTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Official Election Results');
         $response->assertSee($this->candidateUser->name);
+    }
+
+    public function test_cannot_vote_for_candidate_from_another_election(): void
+    {
+        $otherElection = Election::create([
+            'title'         => 'Other Election',
+            'academic_year' => '2025-2026',
+            'status'        => Election::STATUS_VOTING_OPEN,
+            'created_by'    => $this->officer->id,
+        ]);
+
+        $otherPosition = ElectionPosition::create([
+            'election_id' => $otherElection->id,
+            'title'       => 'President',
+            'order'       => 1,
+            'max_winners' => 1,
+        ]);
+
+        $otherCandidate = Candidate::create([
+            'election_id' => $otherElection->id,
+            'position_id' => $otherPosition->id,
+            'user_id'     => $this->candidateUser->id,
+            'platform'    => 'Cross-election attack',
+            'status'      => Candidate::STATUS_APPROVED,
+        ]);
+
+        // Try to vote in $this->election using a candidate from $otherElection
+        $response = $this->actingAs($this->voter)->post(route('elections.vote.cast', $this->election), [
+            'votes' => [
+                $this->position->id => $otherCandidate->id,
+            ],
+        ]);
+
+        $response->assertSessionHasErrors("votes.{$this->position->id}");
+        $this->assertDatabaseMissing('votes', [
+            'election_id'  => $this->election->id,
+            'candidate_id' => $otherCandidate->id,
+        ]);
+    }
+
+    public function test_cannot_vote_for_candidate_in_wrong_position(): void
+    {
+        $otherPosition = ElectionPosition::create([
+            'election_id' => $this->election->id,
+            'title'       => 'Vice President',
+            'order'       => 2,
+            'max_winners' => 1,
+        ]);
+
+        $vpCandidate = Candidate::create([
+            'election_id' => $this->election->id,
+            'position_id' => $otherPosition->id,
+            'user_id'     => User::factory()->create(['account_status' => User::STATUS_ACTIVE])->id,
+            'platform'    => 'VP platform',
+            'status'      => Candidate::STATUS_APPROVED,
+        ]);
+
+        // Try to vote the VP candidate into the President position
+        $response = $this->actingAs($this->voter)->post(route('elections.vote.cast', $this->election), [
+            'votes' => [
+                $this->position->id => $vpCandidate->id,
+            ],
+        ]);
+
+        $response->assertSessionHasErrors("votes.{$this->position->id}");
+        $this->assertDatabaseMissing('votes', [
+            'election_id'  => $this->election->id,
+            'candidate_id' => $vpCandidate->id,
+        ]);
+    }
+
+    public function test_cannot_vote_for_rejected_candidate(): void
+    {
+        $rejectedCandidate = Candidate::create([
+            'election_id' => $this->election->id,
+            'position_id' => $this->position->id,
+            'user_id'     => User::factory()->create(['account_status' => User::STATUS_ACTIVE])->id,
+            'platform'    => 'Rejected platform',
+            'status'      => Candidate::STATUS_REJECTED,
+        ]);
+
+        $response = $this->actingAs($this->voter)->post(route('elections.vote.cast', $this->election), [
+            'votes' => [
+                $this->position->id => $rejectedCandidate->id,
+            ],
+        ]);
+
+        $response->assertSessionHasErrors("votes.{$this->position->id}");
+        $this->assertDatabaseMissing('votes', [
+            'election_id'  => $this->election->id,
+            'candidate_id' => $rejectedCandidate->id,
+        ]);
     }
 }

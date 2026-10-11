@@ -247,7 +247,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function scopeOfficers($query)
     {
-        return $query->whereIn('role', array_merge(self::OFFICER_ROLES, [self::ROLE_ADVISER]));
+        return $query->whereIn('role', array_merge(self::OFFICER_ROLES, [self::ROLE_ADVISER, self::ROLE_ADMIN]));
     }
 
     public function isActive(): bool

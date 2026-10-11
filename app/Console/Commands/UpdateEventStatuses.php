@@ -15,7 +15,6 @@ class UpdateEventStatuses extends Command
     {
         $now = now();
         $today = $now->toDateString();
-        $currentTime = $now->format('H:i');
 
         // 1. Transition past events directly to COMPLETED
         $pastEvents = Event::whereIn('status', [Event::STATUS_PUBLISHED, Event::STATUS_ONGOING])
@@ -37,17 +36,18 @@ class UpdateEventStatuses extends Command
         $toCompleted = $pastEvents->count();
 
         foreach ($todayEvents as $event) {
-            $start = substr($event->start_time ?? '00:00', 0, 5);
-            $end   = $event->end_time ? substr($event->end_time, 0, 5) : null;
+            $start = $event->start_time ?? '00:00:00';
+            $end   = $event->end_time;
+            $fullCurrent = $now->format('H:i:s');
 
-            if ($end && $end <= $currentTime) {
+            if ($end && $end < $fullCurrent) {
                 if ($event->status !== Event::STATUS_COMPLETED) {
                     $event->update(['status' => Event::STATUS_COMPLETED]);
                     AuditLog::record('event_status_auto_completed', "Event '{$event->title}' concluded and was auto-completed.", $event);
                     $this->info("Event [{$event->id}] {$event->title} concluded and transitioned to COMPLETED.");
                     $toCompleted++;
                 }
-            } elseif ($start <= $currentTime) {
+            } elseif ($start <= $fullCurrent) {
                 if ($event->status !== Event::STATUS_ONGOING) {
                     $event->update(['status' => Event::STATUS_ONGOING]);
                     AuditLog::record('event_status_auto_ongoing', "Event '{$event->title}' is now live and auto-transitioned to ongoing.", $event);

@@ -16,7 +16,6 @@ class Vote extends Model
         'election_id',
         'position_id',
         'candidate_id',
-        'voter_hash',
         'created_at',
     ];
 

@@ -238,10 +238,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Candidacy filing
         Route::post('/{election}/apply',                 [CandidateController::class, 'store'])->name('apply');
 
-        // Voting Booth & Results
+        // Voting Booth, Receipts & Results
         Route::get('/{election}/vote',                   [VotingController::class, 'show'])->name('vote');
-        Route::post('/{election}/vote',                  [VotingController::class, 'cast'])->name('vote.cast');
+        Route::post('/{election}/vote',                  [VotingController::class, 'cast'])->middleware('throttle:3,1')->name('vote.cast');
+        Route::get('/{election}/receipt',                [VotingController::class, 'receipt'])->name('receipt');
         Route::get('/{election}/results',                [VotingController::class, 'results'])->name('results');
+        Route::post('/{election}/proclaim',              [VotingController::class, 'proclaim'])->name('proclaim');
     });
 
     // Candidates Review Queue (Officers & Advisers)
@@ -282,14 +284,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // -----------------------------------------------------------------------
-    // Admin — User Management (admin only)
+    // Admin & Officer Console Routes
     // -----------------------------------------------------------------------
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::get('users',           [AdminUserController::class, 'index'])->name('users.index');
-        Route::get('users/{user}',    [AdminUserController::class, 'show'])->name('users.show');
-        Route::patch('users/{user}',  [AdminUserController::class, 'update'])->name('users.update');
+        // User Management (admin only)
+        Route::middleware('admin.only')->group(function () {
+            Route::get('users',           [AdminUserController::class, 'index'])->name('users.index');
+            Route::get('users/{user}',    [AdminUserController::class, 'show'])->name('users.show');
+            Route::patch('users/{user}',  [AdminUserController::class, 'update'])->name('users.update');
+        });
 
-        // Membership Management (officers+)
+        // Membership Management (officers+) — inside admin prefix but accessible to officers
         Route::get('memberships',                       [AdminMembershipController::class, 'index'])->name('memberships.index');
         Route::get('memberships/create',                [AdminMembershipController::class, 'create'])->name('memberships.create');
         Route::post('memberships',                      [AdminMembershipController::class, 'store'])->name('memberships.store');
@@ -298,7 +303,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('memberships/{membership}/approve', [AdminMembershipController::class, 'approve'])->name('memberships.approve');
         Route::post('memberships/{membership}/reject',  [AdminMembershipController::class, 'reject'])->name('memberships.reject');
 
-        // Security & Audit Logs (Phase 9)
+        // Security & Audit Logs (Phase 9 - accessible to admin, auditor, president, adviser)
         Route::get('audit-logs',                    [AdminAuditLogController::class, 'index'])->name('audit-logs.index');
     });
 });

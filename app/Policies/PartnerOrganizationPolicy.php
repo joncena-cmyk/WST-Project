@@ -9,22 +9,22 @@ class PartnerOrganizationPolicy
 {
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->isActive();
     }
 
     public function view(User $user, PartnerOrganization $partnerOrganization): bool
     {
-        return true;
+        return $user->isActive();
     }
 
     public function create(User $user): bool
     {
-        return $user->isOfficerOrAbove() || $user->isAdviser() || $user->isAdmin();
+        return $user->isOfficerOrAbove();
     }
 
     public function update(User $user, PartnerOrganization $partnerOrganization): bool
     {
-        return $user->isOfficerOrAbove() || $user->isAdviser() || $user->isAdmin();
+        return $user->isOfficerOrAbove();
     }
 
     public function delete(User $user, PartnerOrganization $partnerOrganization): bool

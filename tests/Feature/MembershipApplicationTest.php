@@ -31,7 +31,7 @@ class MembershipApplicationTest extends TestCase
             'role'              => User::ROLE_STUDENT,
         ]);
 
-        $file = UploadedFile::fake()->image('receipt.png');
+        $file = UploadedFile::fake()->create('receipt.png', 100, 'image/png');
 
         $response = $this->actingAs($student)->post(route('membership.apply'), [
             'program_id'        => $program->id,

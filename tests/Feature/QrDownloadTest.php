@@ -43,7 +43,7 @@ class QrDownloadTest extends TestCase
         $response = $this->actingAs($student)->get(route('attendance.qr.download', $event));
 
         $response->assertStatus(200);
-        $response->assertHeader('Content-Type', 'image/png');
+        $this->assertContains($response->headers->get('Content-Type'), ['image/png', 'image/svg+xml']);
         $this->assertStringContainsString('attachment', $response->headers->get('Content-Disposition'));
         $this->assertNotEmpty($response->getContent());
     }
